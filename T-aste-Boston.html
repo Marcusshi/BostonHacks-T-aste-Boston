@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-aste Boston — Find your next stop</title>
+<style>
+:root{--red:#c00;--dark:#2d2926;--muted:#605756;--line:#e7dedc;--wash:#faf6f5;--ink:#8b0000}
+*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--dark);font:16px/1.45 system-ui,sans-serif}.wrap{width:min(1280px,calc(100% - 48px));margin:auto}
+header{background:#fff;border-top:7px solid var(--red);border-bottom:1px solid var(--line)}.nav{min-height:61px;display:flex;align-items:center;justify-content:space-between;gap:12px}.nav strong{color:var(--ink);font-weight:800;letter-spacing:-.035em}.nav span{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:750}.nav span{color:var(--muted);text-align:right}
+.hero{background:var(--red);color:#fff;padding:27px 0 37px}.hero h1{margin:3px 0 9px;font-size:clamp(40px,6vw,78px);letter-spacing:-.075em;line-height:1.02}.hero p{margin:0;color:#fff4f4}
+main{padding:22px 0 38px}form,.module,.detail{background:white;border:1px solid var(--line);border-radius:15px;min-width:0}form{padding:17px 18px;margin-bottom:20px}.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:12px}label{display:grid;gap:5px;font-size:13px;font-weight:750}input,select,button{color:inherit;font:inherit}input,select{width:100%;min-height:43px;border:1px solid #cbbdba;border-radius:8px;background:#fff;padding:8px}
+button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;border:1px solid var(--red);background:var(--red);color:white;text-decoration:none;display:inline-block}.link{background:#fff;color:var(--ink);border-color:#e9c4c4;font-size:13px}button:hover,.link:hover{filter:brightness(.94)}:focus-visible{outline:3px solid #94242a;outline-offset:3px}.hint,.muted{color:var(--muted);font-size:13px}.hint{margin:9px 0 0}
+.layout{display:grid;grid-template-columns:minmax(265px,.78fr) minmax(0,1.55fr);gap:18px;align-items:start}.module{overflow:hidden}.module-head{padding:15px 17px 11px}.module-head h2,.detail h2{margin:0;font-size:22px;letter-spacing:-.035em}.module-head p{margin:4px 0 0}.ranks{list-style:none;padding:0;margin:0}.ranks li{border-top:1px solid var(--line);padding:3px 14px 9px}.rank-row{display:grid;grid-template-columns:30px 56px minmax(0,1fr) auto;gap:9px;align-items:center;text-align:left;width:100%;background:#fff;color:var(--dark);border:1px solid transparent;padding:9px 5px}.rank-row[aria-pressed=true]{background:#fff0f0;border-color:#f1cccc}.rank{min-width:27px;height:27px;border-radius:50%;display:grid;place-items:center;color:var(--ink);background:#fce6e6;font-size:13px}.venue{font-weight:800}.score{color:var(--ink);white-space:nowrap}.rating-link{color:var(--muted);font-size:12px;margin-left:45px}.empty{padding:0 17px 17px;margin:0;color:var(--muted)}
+.map-controls{padding:9px 15px;display:flex;gap:13px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px}
+.map-control-group{display:flex;flex-wrap:wrap;gap:6px}
+.detail{margin-top:12px;padding:15px 17px}.detail p{margin:5px 0}.detail ol{margin:8px 0;padding-left:22px}.detail li{margin:4px 0}.detail .links{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.sources{margin-top:19px}.sources a{color:var(--ink)}summary{cursor:pointer;font-weight:750}[hidden]{display:none!important}
+@media(max-width:980px){.fields{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.wrap{width:calc(100% - 24px)}.layout{grid-template-columns:1fr}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:22px 0 26px}}
+@media(max-width:355px){.fields{grid-template-columns:1fr}}
+#google-frame{width:100%;height:100%;border:0;display:block}.map-toggle{padding:4px 8px;background:#fff;color:var(--ink);border-color:#e9c4c4;font-size:12px}.detail-meta{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.detail-meta a{color:var(--ink);font-size:13px}
+#diagram{background:#faf6f5;padding:14px 16px 16px;border-top:1px solid var(--line)}
+.route-timing{margin:0 0 10px}
+.map-trip-summary{margin:0 15px 5px;display:flex;flex-wrap:wrap;align-items:center;gap:9px 14px}.map-trip-summary h3{flex:1 1 125px;min-width:0;margin:0;font-size:18px;overflow-wrap:anywhere}.map-trip-summary .trip-metrics{flex:2 1 240px}
+.trip-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-variant-numeric:tabular-nums}
+.trip-metric{display:block;min-width:0;padding:8px 11px;border:1px solid #eccac5;border-radius:8px;background:#fff0ed;color:var(--ink)}
+.trip-metric-time{border-color:#e7ddda;background:#f5f1ef;color:var(--dark)}
+.metric-label{display:block;color:var(--muted);font-size:12px;font-weight:650}
+.metric-value{display:block;font-size:clamp(20px,2.2vw,27px);font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.metric-value small{font-size:.65em;font-weight:700}.metric-value.price-unknown{font-size:16px}
+.rank-metrics{grid-column:2 / -1;gap:6px}.rank-metrics .trip-metric{padding:5px 7px}.rank-metrics .metric-label{font-size:11px}.rank-metrics .metric-value{font-size:17px}
+#detail-cost-time{margin:10px 0 6px}
+.detail #cost-breakdown{margin-bottom:10px}
+.route-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,246px),1fr));gap:10px}
+.route-leg{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-width:0}
+.route-leg h4{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.route-leg h4 span{font-weight:750;color:var(--dark);font-size:14px;font-variant-numeric:tabular-nums}
+.route-steps{list-style:none;margin:0;padding:0;--walk-color:#707780;--route-color:var(--walk-color)}
+.route-steps li{position:relative;padding:0 0 0 25px;min-height:33px}
+.route-steps .route-stop:before{content:"";position:absolute;left:3px;top:5px;width:10px;height:10px;border:2px solid var(--route-color);background:#fff;border-radius:50%;z-index:1}
+.route-steps .route-stop:not(:last-child):after,.route-steps .route-segment:before{content:"";position:absolute;left:9px;top:11px;bottom:-11px;border-left:2px solid var(--route-color)}
+.route-steps .route-segment:before{top:0;bottom:0}
+.route-steps .route-walk:before,.route-steps .route-stop:has(+ .route-walk):after{border-left-color:var(--walk-color);border-left-style:dashed}
+.route-steps .route-segment{padding-bottom:8px;color:var(--muted);font-size:13px}.route-steps .route-stop{font-size:14px;font-weight:750}.route-steps .route-stop span{display:block;color:var(--muted);font-size:12px;font-weight:550}
+.route-line{background:var(--route-color);color:var(--route-label-color);padding:1px 5px;border-radius:4px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.route-retry{margin-left:5px;padding:2px 6px}
+.route-empty{margin:0;color:var(--muted);font-size:14px}
+.map-toggle[aria-pressed=true]{background:var(--red);color:#fff;border-color:var(--red)}
+.map-controls a{color:var(--ink)}.map-caption{padding:0 15px}.route-leg[data-active=true]{border-color:#d08a8a;box-shadow:inset 0 3px 0 var(--red)}
+#google-embed{height:clamp(330px,52vw,530px);background:var(--wash)}
+.opening-hours{padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--wash);font-size:13px}
+.hours-today{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.opening-hours a,.opening-hours summary{color:var(--ink)}.opening-hours details{margin-top:5px}
+.detail .hours-list{list-style:none;padding:0;margin:5px 0}.detail .hours-list li{display:grid;grid-template-columns:max-content minmax(0,1fr);justify-content:space-between;gap:6px 16px;border-top:1px solid var(--line);padding:5px 0;margin:0}
+.hours-list .hours-value{text-align:right;overflow-wrap:anywhere}.hours-list .hours-unparsed{grid-column:1 / -1}
+.detail-panel{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.detail-panel h3,.detail-panel h4{margin:0 0 6px}.detail-panel h3{font-size:17px}.detail-panel h4{font-size:15px}
+.detail-panel summary{color:var(--ink)}.detail-panel .maps-attribution{margin:8px 0}
+.place-media-card{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--wash)}
+.media-preview{display:grid;gap:10px 14px;align-items:start}
+.media-preview.has-photo{grid-template-columns:minmax(80px,155px) minmax(0,1fr)}
+.gallery-photo{margin:0}.gallery-photo a{color:var(--ink)}.gallery-photo>a{display:block}
+.gallery-photo img{width:100%;aspect-ratio:4/3;display:block;object-fit:cover;border-radius:7px;background:#eee5e3}
+.gallery-photo figcaption{margin-top:3px;font-size:10px;overflow-wrap:anywhere}
+.media-controls{display:flex;align-items:center;gap:6px;margin-top:5px}.media-controls button{min-width:28px}.media-controls button:disabled{opacity:.45;cursor:default}
+.review-preview{min-width:0;overflow-wrap:anywhere}.review-preview h4{margin:0}.review-snippet{font-size:13px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.review-details{margin-top:8px;font-size:13px}.review-details[open]{margin-top:12px}
+.place-media-card:has(.review-details[open]) .review-snippet{display:none}
+@media(max-width:450px){.media-preview.has-photo{grid-template-columns:minmax(76px,105px) minmax(0,1fr);column-gap:10px}}
+.detail .place-reviews{list-style:none;margin:0;padding:0}.detail .place-reviews li{border-top:1px solid var(--line);padding:9px 0}.place-reviews a{color:var(--ink)}.review-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.review-author{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.review-author img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+#wait-buffer{max-width:160px}.over-time{color:var(--ink);font-weight:700}
+.search-actions{display:flex;align-items:end;gap:12px;margin-top:12px}.search-actions label{flex:1}
+.endpoint-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.endpoint-fields label{min-width:0}
+.endpoint-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:6px}
+.place-shortcut{width:auto;max-width:100%;min-height:35px;padding:5px 7px;font-size:13px}
+#location-status{margin:4px 0 0}
+@media(max-width:700px){.endpoint-fields{grid-template-columns:1fr}}
+.rank-photo{width:56px;height:52px;border-radius:7px;overflow:hidden;background:var(--wash);display:grid;place-items:center;text-align:center;font-size:10px;color:var(--muted)}
+.rank-photo img{width:100%;height:100%;object-fit:cover}.rank-copy{min-width:0;overflow-wrap:anywhere}.rank-copy .muted{display:block}
+.budget-pick{margin:0 13px 11px;padding:9px 10px;border:1px solid #eccac5;border-radius:9px;background:var(--wash)}
+.budget-pick h3{margin:0;font-size:15px;color:var(--ink)}.budget-pick .muted{margin:3px 0}
+.budget-pick .ranks li{border:0;padding:5px 0 0}.budget-row{grid-template-columns:56px minmax(0,1fr) auto}.budget-row .rank-metrics{grid-column:1 / -1}
+.rank-credit{margin:3px 0 0 45px;font-size:11px;overflow-wrap:anywhere}.rank-credit a{color:var(--muted)}
+.maps-attribution{white-space:nowrap;font-size:12px;font-weight:400;letter-spacing:normal;color:#5e5e5e;margin:4px 0 0}
+@media(max-width:355px){.search-actions{align-items:stretch;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><strong>T-aste Boston</strong><span>BostonHacks · Eats &amp; Streets</span></div></header>
+<section class="hero"><div class="wrap"><h1>Find your next bite.</h1><p>Plan a meal around your Boston trip.</p></div></section>
+<main class="wrap">
+<form id="planner" aria-label="Trip preferences">
+<div class="endpoint-fields">
+  <div><label>Start address or place<input id="origin" list="location-options" value="My location" maxlength="180" required autocomplete="off"></label>
+    <div class="endpoint-actions"><select id="origin-place" class="place-shortcut" aria-label="Boston places for start"></select>
+    <button id="use-location" class="link" type="button">Use my location</button></div>
+    <p class="muted" id="location-status" role="status"></p>
+  </div>
+  <div><label>After-meal address or place<input id="return" list="location-options" maxlength="180" placeholder="Leave blank to return to the start" autocomplete="off"></label>
+    <div class="endpoint-actions"><select id="return-place" class="place-shortcut" aria-label="Boston places for after the meal"></select></div>
+  </div>
+</div>
+<datalist id="location-options"></datalist>
+<div class="fields">
+<label>Budget per person ($)<input id="budget" required type="number" min="0" max="999" step="0.01" value="32"></label>
+<label>Time available (min)<input id="time" required type="number" min="1" max="480" value="120"></label>
+<label>Travel mode<select id="travel-mode"><option value="auto">Fastest (walk or transit)</option><option value="transit">Public transit</option><option value="walking">Walking</option></select></label>
+<label>Craving<select id="cuisine"><option value="any">Anything</option><option value="asian">Any Asian cuisine</option><option value="korean">Korean</option><option value="chinese">Chinese</option><option value="japanese">Japanese</option><option value="thai">Thai</option><option value="vietnamese">Vietnamese</option><option value="mediterranean">Mediterranean</option><option value="mexican">Mexican</option><option value="american">American</option><option value="noodles">Noodles & ramen</option><option value="dumplings">Dumplings</option><option value="fried-chicken">Fried chicken</option><option value="burgers">Burgers</option><option value="bakery">Coffee & bakery</option><option value="vegetarian">Vegetarian options</option></select></label>
+</div>
+<div class="search-actions"><label>Restaurant or dish (optional)<input id="restaurant-query" type="search" maxlength="100" placeholder="e.g. ramen or Tatte" autocomplete="off"></label><button type="submit">Find restaurants</button></div>
+<p class="hint">Budget and time cover the meal and both legs. Leave the after-meal address blank to return to the start.</p></form>
+<div class="layout">
+<section class="module" aria-labelledby="results-heading">
+  <div class="module-head"><h2 id="results-heading" tabindex="-1">Restaurant rankings</h2><p class="muted" id="result-status" role="status"></p><p class="maps-attribution" id="rank-attribution" translate="no" hidden>Google Maps</p></div>
+  <aside class="budget-pick" id="budget-pick" aria-labelledby="budget-pick-heading" hidden>
+    <h3 id="budget-pick-heading">Higher-budget pick</h3>
+    <p class="muted" id="budget-pick-status"></p>
+    <ul class="ranks" id="budget-pick-list"></ul>
+  </aside>
+  <ol class="ranks" id="ranks"></ol><p class="empty" id="empty" hidden></p>
+  <aside class="budget-pick" id="route-previews" aria-labelledby="route-previews-heading" hidden>
+    <h3 id="route-previews-heading">Transit previews</h3>
+    <p class="muted">Open now. Check the map for travel times before choosing.</p>
+    <ul class="ranks" id="route-preview-list"></ul>
+  </aside>
+</section>
+<div>
+<section class="module" aria-labelledby="map-heading"><div class="module-head"><h2 id="map-heading">Map &amp; route</h2><p class="muted">Choose a restaurant, then switch between the outbound and return legs.</p></div>
+<div class="map-trip-summary" id="map-trip-summary" hidden></div>
+<div class="map-controls" id="leg-controls" hidden>
+  <div class="map-control-group" role="group" aria-label="Route leg">
+    <button type="button" class="map-toggle" id="map-outbound" aria-pressed="true">Outbound</button>
+    <button type="button" class="map-toggle" id="map-return" aria-pressed="false">Return</button>
+  </div>
+  <div class="map-control-group" role="group" aria-label="Map travel mode">
+    <button type="button" class="map-toggle" id="map-mode-recommended" aria-pressed="true">Recommended</button>
+    <button type="button" class="map-toggle" id="map-mode-transit" aria-pressed="false">Public transit</button>
+    <button type="button" class="map-toggle" id="map-mode-walking" aria-pressed="false">Walking</button>
+  </div>
+  <a id="google-directions-link" target="_blank" rel="noopener">Open directions in Google Maps ↗</a>
+</div>
+<div id="google-embed" hidden><iframe id="google-frame" title="Google Maps directions" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+<p class="muted map-caption" id="map-status" role="status" hidden>Google Maps directions · travel times may differ from planner estimates.</p>
+<div id="diagram" aria-label="Selected restaurant route"></div>
+</section>
+<section class="detail" id="detail" aria-label="Selected trip" hidden></section>
+</div></div>
+<details class="sources"><summary>Data and estimates</summary><p class="muted">Google Maps searches multiple areas across Boston. The planner checks your full trip time for those results and shows up to ten that fit, sorted by rating and then review count. Trip costs use Google’s starting meal price, a 20% tax and tip estimate, and fares when available. The transit option can include buses, subway, light rail, commuter rail, and other scheduled service in Google Maps. The planner assumes a 25-minute meal and uses an approximate departure time for return transit. Check current service, prices, and hours before leaving.</p><p><a href="https://www.mbta.com/alerts" target="_blank" rel="noopener">MBTA service alerts</a></p></details>
+</main>
+<script src="./maps-config.js"></script>
+<script>
+const restaurants = [
+  {id:"kim", station:"harvard", pos:[42.35231,-71.13237], rating:4.5, reviews:4, ratingUrl:"https://www.tripadvisor.com/Restaurant_Review-g60745-d14176243-Reviews-Kimchipapi_Kitchen-Boston_Massachusetts.html", meal:22,  venue:"Kimchipapi Kitchen", dish:"Bibimbap", cuisine:"korean", area:"Allston", address:"81 Harvard Ave, Allston, MA", price:1499, walk:6, activity:"Browse Harvard Avenue’s storefronts", extra:16, menu:"https://order.online/store/23425279"},
+  {id:"kaju", station:"harvard", pos:[42.35289,-71.13244], rating:4.2, reviews:41, ratingUrl:"https://www.tripadvisor.com/Restaurant_Review-g60745-d3476395-Reviews-Kaju_Tofu_House-Boston_Massachusetts.html", meal:27,  venue:"Kaju Korean Cuisine", dish:"Dumpling tofu soup", cuisine:"korean", area:"Allston", address:"56 Harvard Ave, Allston, MA", price:1699, walk:7, activity:"Walk through the Harvard–Brighton Avenue intersection and explore the neighborhood shops", extra:20, menu:"https://kajuallston.com/wp-content/uploads/2026/08/kaju-allston-menu.pdf"},
+  {id:"dumpling", station:"boylston", pos:[42.35137,-71.06280], rating:3.8, reviews:310, ratingUrl:"https://www.tripadvisor.com/Restaurant_Review-g60745-d2188177-Reviews-Dumpling_Cafe-Boston_Massachusetts.html", meal:28,  venue:"Dumpling Cafe", dish:"Pork soup dumplings", cuisine:"chinese", area:"Chinatown", address:"695 Washington St, Boston, MA", price:1295, walk:6, activity:"Take a walk through Boston Common", extra:23, menu:"https://www.dumplingcafeboston.com/order/main/popular-items"},
+  {id:"pelon", station:"bc", pos:[42.34014,-71.16581], rating:4.4, reviews:91, ratingUrl:"https://www.tripadvisor.com/Restaurant_Review-g60745-d323048-Reviews-El_Pelon_Taqueria-Boston_Massachusetts.html", meal:20,  venue:"El Pelón Taquería", dish:"Bean and cheese burrito", cuisine:"mexican", area:"Brighton", address:"2197 Commonwealth Ave, Brighton, MA", price:895, walk:3, activity:"Stroll along Commonwealth Avenue near Boston College", extra:18, menu:"https://toast.app/r/el-pelon-taqueria-brighton-2197-commonwealth-ave/order"},
+  {"id": "coreanos", "venue": "Coreanos", "dish": "Coreanos bowl", "price": 1600, "cuisine": "korean", "tags": ["fried-chicken"], "area": "Allston", "address": "172 Brighton Ave, Allston, MA", "station": "harvard", "pos": [42.35312, -71.13317], "walk": 7, "meal": 24, "rating": 4.3, "reviews": 20, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d10638188-Reviews-Coreanos-Boston_Massachusetts.html", "menu": "https://www.coreanosma.com/menu/", "activity": "Browse the storefronts on Harvard Avenue", "extra": 18},
+  {"id": "bonchon", "venue": "Bonchon Allston", "dish": "K-Chicken sandwich", "price": 1399, "cuisine": "korean", "tags": ["fried-chicken"], "area": "Allston", "address": "123 Brighton Ave, Allston, MA", "station": "harvard", "pos": [42.35292, -71.12943], "walk": 8, "meal": 24, "rating": 4.2, "reviews": 72, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d4417869-Reviews-Bonchon_Allston-Boston_Massachusetts.html", "menu": "https://order.bonchon.com/menu/ma-allston-brighton-ave-2", "activity": "Browse the storefronts on Harvard Avenue", "extra": 18},
+  {"id": "thai", "venue": "S & I Thai Cuisine", "dish": "Pad Thai", "price": 1500, "cuisine": "thai", "tags": ["noodles"], "area": "Allston", "address": "168A Brighton Ave, Allston, MA", "station": "harvard", "pos": [42.35313, -71.13294], "walk": 7, "meal": 26, "rating": 4.6, "reviews": 16, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d1066844-Reviews-S_I_Thai_Cuisine-Boston_Massachusetts.html", "menu": "https://www.beyondmenu.com/48301/allston/s-and-i-to-go-allston-02134.aspx", "activity": "Browse the storefronts on Harvard Avenue", "extra": 18},
+  {"id": "garlic", "venue": "Garlic’n Lemons", "dish": "BBQ chicken shawarma plate", "price": 1775, "cuisine": "mediterranean", "tags": ["vegetarian"], "area": "Allston", "address": "133 Harvard Ave, Allston, MA", "station": "harvard", "pos": [42.351, -71.13183], "walk": 4, "meal": 22, "rating": 4.6, "reviews": 40, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d2352734-Reviews-Garlic_n_Lemons-Boston_Massachusetts.html", "menu": "https://order.garliclemons.com/menu", "activity": "Browse the storefronts on Harvard Avenue", "extra": 18},
+  {"id": "pho", "venue": "Pho Pasteur", "dish": "Large combination beef pho", "price": 1703, "cuisine": "vietnamese", "tags": ["noodles"], "area": "Chinatown", "address": "682 Washington St, Boston, MA", "station": "boylston", "pos": [42.35157, -71.06282], "walk": 6, "meal": 28, "rating": 3.9, "reviews": 466, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d321744-Reviews-Pho_Pasteur-Boston_Massachusetts.html", "menu": "https://phopasteurboston.net/menu-boston.html", "activity": "Take a walk through Boston Common", "extra": 23},
+  {"id": "santouka", "venue": "Santouka Back Bay", "dish": "Shio ramen", "price": 1800, "cuisine": "japanese", "tags": ["noodles"], "area": "Back Bay", "address": "66 Hereford St, Boston, MA", "station": "hynes", "pos": [42.3484, -71.08646], "walk": 4, "meal": 28, "rating": 4.5, "reviews": 67, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d11696847-Reviews-Santouka_Back_Bay-Boston_Massachusetts.html", "menu": "https://www.santouka-usa.com/menu", "activity": "Browse Newbury Street", "extra": 18},
+  {"id": "tatte", "venue": "Tatte Bakery & Café", "dish": "Breakfast sandwich", "price": 1200, "cuisine": "bakery", "tags": [], "area": "Fenway", "address": "1352 Boylston St, Boston, MA", "station": "kenmore", "pos": [42.34419, -71.09843], "walk": 10, "meal": 20, "rating": 4.5, "reviews": 64, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d13149017-Reviews-Tatte_Bakery_Cafe_Fenway-Boston_Massachusetts.html", "menu": "https://tattebakery.com/locations/ma/boston/1352-boylston-st/", "activity": "Walk past Fenway Park", "extra": 15},
+  {"id": "tasty", "venue": "Tasty Burger", "dish": "Cheeseburger", "price": 900, "cuisine": "american", "tags": ["burgers"], "area": "Fenway", "address": "86 Van Ness St, Boston, MA", "station": "kenmore", "pos": [42.34518, -71.09876], "walk": 9, "meal": 21, "rating": 4.2, "reviews": 392, "ratingUrl": "https://www.tripadvisor.com/Restaurant_Review-g60745-d2663863-Reviews-Tasty_Burger-Boston_Massachusetts.html", "menu": "https://www.tastyburger.com/menu/", "activity": "Walk past Fenway Park", "extra": 15}
+];
+const officialPhotos = {
+  "pelon": [
+    "https://images.squarespace-cdn.com/content/v1/5ace3e68cc8fed1087073521/1528290769196-EH561PQFV9DT6RCTLWYN/El%2BGuapo.jpg?format=750w",
+    "https://elpelon.com/",
+    "El Pelón’s El Guapo burrito"
+  ],
+  "coreanos": [
+    "https://www.coreanosma.com/wp-content/uploads/coreanosma.com/2025/06/yswx_20250618_7a579fe7e60e490aba1d2a1dc6d4c238.jpg",
+    "https://www.coreanosma.com/",
+    "Coreanos bowl"
+  ],
+  "kaju": [
+    "https://lucyleekaju.wordpress.com/wp-content/uploads/2026/09/rectangle-2.png",
+    "https://kajuallston.com/",
+    "Food from Kaju Korean Cuisine"
+  ],
+  "kim": [
+    "https://images.squarespace-cdn.com/content/v1/682764e7abca7f498648588d/c35d8576-33ea-4638-b275-4942e68c0e15/uber-allston.jpeg?format=750w",
+    "https://www.kimchipapi.com/",
+    "Kimchipapi Kitchen dishes"
+  ],
+  "tatte": [
+    "https://a.mktgcdn.com/p/y0rtnWeeb59FnyU80DFyZK1hYpZwzD1-IW1pD56mVo4/500x1000.jpg",
+    "https://tattebakery.com/locations/ma/boston/1352-boylston-st/",
+    "Tatte Fenway location photo"
+  ],
+  "bonchon": [
+    "https://olo-images-live.imgix.net/c8/c845d265bd29408bbb78a9be05f6b170.jpg",
+    "https://restaurants.bonchon.com/locations/ma/allston/123-brighton-ave",
+    "Bonchon K-Chicken sandwich"
+  ],
+  "garlic": [
+    "https://framerusercontent.com/images/scRp9JNIFOCSfQLfCto8Dagh0.webp?height=900&scale-down-to=512&width=1200",
+    "https://garliclemons.com/",
+    "Garlic’n Lemons chicken plate"
+  ],
+  "santouka": [
+    "https://images.squarespace-cdn.com/content/v1/65b3d011900d3d4d8e22b62d/2a3d6123-218b-4bfe-a534-744bafbd602d/Santouka%2BBack%2BBay2.jpeg?format=750w",
+    "https://www.santouka-usa.com/locations",
+    "Santouka Back Bay dining room"
+  ],
+  "tasty": [
+    "https://cdn.bostonchefs.com/bostonchefs/wp-content/uploads/2020/05/tastyburgerusa_92926669_644376293012819_5341804035770693345_n-e1589559038782-1280x721.jpg",
+    "https://www.bostonchefs.com/news/2020/05/15/tasty-burger-fenway-opens-for-take-out/",
+    "Tasty Burger with fries",
+    "BostonChefs photo source"
+  ]
+};
+const extraTags = {dumpling:["dumplings"],kaju:["dumplings","vegetarian"],pelon:["vegetarian"]};
+const asianCuisines = new Set(["korean","chinese","japanese","thai","vietnamese"]);
+const googleCuisineTypes = {
+  korean:["korean_restaurant", "korean_barbecue_restaurant"],
+  chinese:["chinese_restaurant", "cantonese_restaurant", "chinese_noodle_restaurant", "dim_sum_restaurant"],
+  japanese:["japanese_restaurant", "sushi_restaurant", "ramen_restaurant", "japanese_curry_restaurant",
+    "japanese_izakaya_restaurant", "tonkatsu_restaurant", "yakitori_restaurant"],
+  thai:["thai_restaurant"],
+  vietnamese:["vietnamese_restaurant"],
+  mediterranean:["mediterranean_restaurant", "greek_restaurant", "lebanese_restaurant", "turkish_restaurant", "middle_eastern_restaurant"],
+  mexican:["mexican_restaurant", "taco_restaurant", "burrito_restaurant", "tex_mex_restaurant"],
+  american:["american_restaurant", "hamburger_restaurant", "cajun_restaurant", "soul_food_restaurant", "southwestern_us_restaurant"]
+};
+const otherAsianTypes = [
+  "burmese_restaurant", "cambodian_restaurant", "filipino_restaurant", "indian_restaurant",
+  "indonesian_restaurant", "malaysian_restaurant", "pakistani_restaurant", "sri_lankan_restaurant",
+  "taiwanese_restaurant", "tibetan_restaurant"
+];
+const asianPlaceTypes = ["asian_restaurant", ...[...asianCuisines].flatMap(cuisine => googleCuisineTypes[cuisine]), ...otherAsianTypes];
+const specificCuisineTypes = new Set([...Object.values(googleCuisineTypes).flat(), ...otherAsianTypes]);
+const byId = id => document.getElementById(id);
+const money = cents => (cents / 100).toLocaleString("en-US",{style:"currency",currency:"USD"});
+
+function distanceMeters([latitude, longitude], [otherLatitude, otherLongitude]) {
+  return Math.hypot((latitude - otherLatitude) * 111200, (longitude - otherLongitude) * 82200);
+}
+
+function estimateWalkMinutes(meters) {
+  return Math.max(2, Math.ceil(meters * 1.25 / 80));
+}
+
+const bostonPlaces = [
+  {name:"Boston Common Visitor Center", address:"139 Tremont St, Boston, MA 02111"},
+  {name:"Faneuil Hall", address:"1 Faneuil Hall Square, Boston, MA 02109"},
+  {name:"South Station", address:"700 Atlantic Ave, Boston, MA 02110"},
+  {name:"Boston Public Library (Copley Square)", address:"700 Boylston St, Boston, MA 02116"},
+  {name:"Paul Revere House", address:"19 North Square, Boston, MA 02113"},
+  {name:"ICA Boston (Seaport)", address:"25 Harbor Shore Drive, Boston, MA 02210"},
+  {name:"Fenway Park", address:"4 Jersey St, Boston, MA 02215"},
+  {name:"Museum of Fine Arts", address:"465 Huntington Ave, Boston, MA 02115"},
+  {name:"Jamaica Plain Branch Library", address:"30 South St, Jamaica Plain, MA 02130"}
+];
+const bostonCenter = [42.355, -71.065];
+// Fixed, overlapping search areas cover Boston neighborhoods independently of the trip endpoints.
+const bostonSearchAreas = [
+  {north:42.391,south:42.345,west:-71.089,east:-71.045},
+  {north:42.416,south:42.363,west:-71.083,east:-70.984},
+  {north:42.380,south:42.325,west:-71.181,east:-71.088},
+  {north:42.364,south:42.320,west:-71.100,east:-71.005},
+  {north:42.342,south:42.276,west:-71.163,east:-71.068},
+  {north:42.335,south:42.259,west:-71.096,east:-71.013},
+  {north:42.307,south:42.219,west:-71.196,east:-71.060}
+];
+const bostonLocalities = new Set([
+  "boston", "allston", "brighton", "charlestown", "dorchester", "dorchester center", "east boston",
+  "hyde park", "jamaica plain", "mattapan", "readville", "roslindale", "roxbury", "roxbury crossing",
+  "south boston", "west roxbury"
+]);
+const bostonPostalCodes = new Set([
+  "02108", "02109", "02110", "02111", "02113", "02114", "02115", "02116", "02118", "02119",
+  "02120", "02121", "02122", "02124", "02125", "02126", "02127", "02128", "02129", "02130",
+  "02131", "02132", "02134", "02135", "02136", "02163", "02199", "02210", "02215", "02228"
+]);
+const locationLabel = "My location";
+let deviceOrigin = null;
+
+function latLng([lat, lng]) {
+  return {lat, lng};
+}
+
+async function resolveEndpoint(value, personalLocation = null) {
+  if (value === locationLabel) return personalLocation;
+  const preset = bostonPlaces.find(place => place.name.toLowerCase() === value.toLowerCase());
+  const address = preset?.address ?? value;
+
+  const {Place} = await loadPlacesLibrary();
+  const {places = []} = await Place.searchByText({
+    textQuery:preset ? `${preset.name}, ${address}` : address,
+    locationBias:{center:latLng(bostonCenter), radius:30000},
+    fields:["id", "displayName", "formattedAddress", "location"],
+    maxResultCount:5, language:"en-US", region:"us"
+  });
+  const houseNumber = address.match(/^\d+[a-z]?\b/i)?.[0]?.toLowerCase();
+  for (const place of places) {
+    if (!place.location || !place.formattedAddress) continue;
+    const pos = [place.location.lat(), place.location.lng()];
+    const resultNumber = place.formattedAddress.match(/^\d+[a-z]?\b/i)?.[0]?.toLowerCase();
+    const matchesPreset = preset && venueKey(place.displayName ?? "") === venueKey(preset.name);
+    const matchesAddress = preset ? streetKey(place.formattedAddress) === streetKey(address)
+      : !houseNumber || houseNumber === resultNumber;
+    if (pos.every(Number.isFinite) && distanceMeters(pos, bostonCenter) <= 35000 &&
+        (matchesAddress || matchesPreset)) {
+      return {name:preset?.name ?? place.formattedAddress, pos, placeId:place.id};
+    }
+  }
+  return null;
+}
+
+function estimatedWalkingLeg(from, to) {
+  return {transit:false, cost:0, minutes:estimateWalkMinutes(distanceMeters(from, to)), estimated:true};
+}
+
+function routeMatrixLeg(item, departureTime) {
+  if (item?.condition !== "ROUTE_EXISTS" || !Number.isFinite(item.durationMillis)) return null;
+  const transit = Boolean(departureTime);
+  const fareText = item.localizedValues?.transitFare?.trim().match(/^(?:US\s*\$|\$|USD\s*)([\d,]+(?:\.\d{1,2})?)$/i);
+  const cost = !transit ? 0 : fareText ? Math.round(Number(fareText[1].replaceAll(",", "")) * 100) : null;
+  return {transit, cost, minutes:Math.ceil(item.durationMillis / 60000), departureTime};
+}
+
+async function planRoutes(places, {origin, end, travelMode}) {
+  if (!places.length) return {places};
+  let RouteMatrix;
+  try {
+    await loadPlacesLibrary();
+    ({RouteMatrix} = await window.google.maps.importLibrary("routes"));
+  } catch {
+    // The directions map can still show transit when the Routes library is unavailable.
+  }
+
+  let transitUnverified = false;
+  let transitRequestSucceeded = false;
+  const waypoints = places.map(place => latLng(place.pos));
+  const routeLegs = async (returning, departureTime) => {
+    const request = async (mode) => {
+      const transit = mode === "TRANSIT";
+      try {
+        if (!RouteMatrix) return null;
+        const {matrix} = await RouteMatrix.computeRouteMatrix({
+          origins:returning ? waypoints : [latLng(origin.pos)],
+          destinations:returning ? [latLng(end.pos)] : waypoints,
+          fields:transit ? ["condition", "durationMillis", "localizedValues"] : ["condition", "durationMillis"],
+          travelMode:mode, region:"us", language:"en-US",
+          ...(transit ? {departureTime} : {})
+        });
+        if (transit) transitRequestSucceeded = true;
+        return places.map((_, index) => returning ? matrix.rows[index]?.items[0] : matrix.rows[0]?.items[index]);
+      } catch {
+        return null;
+      }
+    };
+
+    const [walking, transit] = await Promise.all([
+      travelMode === "transit" ? [] : request("WALKING"),
+      travelMode === "walking" ? [] : request("TRANSIT")
+    ]);
+    return places.map((place, index) => {
+      const transitLeg = routeMatrixLeg(transit?.[index], departureTime);
+      const missingTransit = travelMode !== "walking" && !transitLeg && transit?.[index]?.condition !== "ROUTE_NOT_FOUND";
+      if (missingTransit) transitUnverified = true;
+      if (travelMode === "transit") {
+        return transitLeg ?? (missingTransit ? {transit:true, minutes:null, cost:null, departureTime} : null);
+      }
+
+      const walkingLeg = routeMatrixLeg(walking?.[index]);
+      if (transitLeg && (!walkingLeg || transitLeg.minutes < walkingLeg.minutes)) return transitLeg;
+      if (walkingLeg) return walkingLeg;
+      if (walking?.[index]?.condition === "ROUTE_NOT_FOUND") return null;
+      return returning ? estimatedWalkingLeg(place.pos, end.pos) : estimatedWalkingLeg(origin.pos, place.pos);
+    });
+  };
+
+  const outbound = await routeLegs(false, new Date());
+  if (!outbound.some(Boolean)) return {places:[], transitUnverified, transitRequestSucceeded};
+  const durations = outbound.flatMap(leg => Number.isFinite(leg?.minutes) ? [leg.minutes] : []).sort((a, b) => a - b);
+  const typicalOutbound = durations[Math.floor(durations.length / 2)] ?? 0;
+  const returnTime = new Date(Date.now() + (typicalOutbound + places[0].meal) * 60000);
+  const inbound = await routeLegs(true, returnTime);
+  const planned = places.flatMap((place, index) => outbound[index] && inbound[index]
+    ? [{...place, outbound:outbound[index], inbound:inbound[index]}] : []);
+  return {
+    places:planned, transitUnverified, transitRequestSucceeded,
+    walkingEstimates:planned.some(place => place.outbound.estimated || place.inbound.estimated)
+  };
+}
+
+const minutesPerDay = 24 * 60;
+const weekDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const bostonClock = new Intl.DateTimeFormat("en-US", {
+  timeZone:"America/New_York", weekday:"short", hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+});
+
+function bostonWeekMinute(date) {
+  const parts = Object.fromEntries(bostonClock.formatToParts(date).map(part => [part.type, part.value]));
+  return weekDayNames.indexOf(parts.weekday) * minutesPerDay + Number(parts.hour) * 60 + Number(parts.minute);
+}
+
+function openingPointMinute(point) {
+  const {day, hour = 0, minute = 0} = point ?? {};
+  if (!Number.isInteger(day) || day < 0 || day > 6 ||
+      !Number.isInteger(hour) || hour < 0 || hour > 23 ||
+      !Number.isInteger(minute) || minute < 0 || minute > 59) return NaN;
+  return day * minutesPerDay + hour * 60 + minute;
+}
+
+function isOpenAt(periods, minute) {
+  return periods.some(({open, close}) => {
+    const start = openingPointMinute(open);
+    if (!Number.isFinite(start)) return false;
+    if (!close) return start === 0;
+    const end = openingPointMinute(close);
+    if (!Number.isFinite(end) || end === start) return false;
+    return end < start ? minute >= start || minute < end : minute >= start && minute < end;
+  });
+}
+
+function compareRatings(a, b) {
+  return b.rating - a.rating || b.reviews - a.reviews || a.venue.localeCompare(b.venue);
+}
+
+function rankTrips(places, {budget, time}, now = new Date()) {
+  const currentMinute = bostonWeekMinute(now);
+  return places
+    .filter(place => place.outbound && place.inbound && place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute))
+    .map(place => {
+      const {outbound, inbound} = place;
+      const fare = (outbound.cost ?? 0) + (inbound.cost ?? 0);
+      const fareUnknown = outbound.cost === null || inbound.cost === null;
+      const reserve = place.price === null ? null : Math.round(place.price * .20);
+      const total = reserve === null ? null : place.price + reserve + fare;
+      const minutes = outbound.minutes === null || inbound.minutes === null
+        ? null : outbound.minutes + place.meal + inbound.minutes;
+      return {...place, fare, fareUnknown, reserve, total, minutes};
+    })
+    .filter(trip => (trip.total ?? trip.fare) <= budget &&
+      trip.meal + (trip.outbound.minutes ?? 0) + (trip.inbound.minutes ?? 0) <= time &&
+      (trip.outbound.minutes === null || isOpenAt(trip.openingPeriods,
+        bostonWeekMinute(new Date(now.getTime() + trip.outbound.minutes * 60000)))))
+    .sort(compareRatings);
+}
+
+function higherBudgetPick(trips, previousBudget) {
+  if (previousBudget === null) return null;
+  return trips.reduce((best, trip) => {
+    return trip.minutes !== null && !trip.fareUnknown && trip.total !== null && trip.total > (best?.total ?? previousBudget) ? trip : best;
+  }, null);
+}
+
+function savedPlaces({cuisine, query}) {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return restaurants.filter(place => {
+    const tags = place.tags ?? extraTags[place.id] ?? [];
+    const matchesCuisine = cuisine === "any" || place.cuisine === cuisine ||
+      (cuisine === "asian" && asianCuisines.has(place.cuisine)) || tags.includes(cuisine);
+    const searchText = [place.venue, place.dish, place.area, place.cuisine, ...tags].join(" ").toLowerCase();
+    return matchesCuisine && words.every(word => searchText.includes(word));
+  });
+}
+
+const state = {origin:null, end:null, time:120, ranked:[], previews:[], budgetPick:null, selected:null};
+let activeLeg = "outbound";
+let mapMode = "recommended";
+const googleEmbedKey = (window.TASTE_BOSTON_MAPS_KEY ?? "").trim();
+
+function selectTrip(id) {
+  state.selected = id;
+  document.querySelectorAll(".rank-row").forEach(row => row.setAttribute("aria-pressed",String(row.dataset.id === id)));
+  renderDetail();
+  renderMap();
+}
+
+let placesLibrary;
+let searchSequence = 0;
+let openingHoursTimer;
+let lastBudget = Math.round(Number(byId("budget").defaultValue) * 100);
+let previousBudget = null;
+
+function loadPlacesLibrary() {
+  if (placesLibrary) return placesLibrary;
+  placesLibrary = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    const timer = setTimeout(() => fail("Google Maps took too long to load."), 12000);
+    const fail = message => {
+      clearTimeout(timer);
+      script.remove();
+      reject(new Error(message));
+    };
+    window.gm_authFailure = () => fail("Google Maps did not authorize the browser key.");
+    window.initTasteBostonPlaces = async () => {
+      try {
+        const library = await window.google.maps.importLibrary("places");
+        clearTimeout(timer);
+        resolve(library);
+      } catch {
+        fail("The Places library could not be loaded.");
+      }
+    };
+    script.async = true;
+    script.onerror = () => fail("Google Maps could not be loaded.");
+    const params = new URLSearchParams({
+      key:googleEmbedKey, v:"weekly", loading:"async", libraries:"places", callback:"initTasteBostonPlaces"
+    });
+    script.src = "https://maps.googleapis.com/maps/api/js?" + params;
+    document.head.append(script);
+  }).catch(error => {
+    placesLibrary = undefined;
+    throw error;
+  });
+  return placesLibrary;
+}
+
+function googleRestaurant(place) {
+  if (!place.id || !place.displayName || !place.formattedAddress || !place.location ||
+      !Number.isFinite(place.rating) || place.businessStatus === "CLOSED_PERMANENTLY" ||
+      place.businessStatus === "CLOSED_TEMPORARILY" || place.businessStatus === "FUTURE_OPENING") return null;
+
+  const pos = [place.location.lat(), place.location.lng()];
+  if (!pos.every(Number.isFinite)) return null;
+
+  const start = place.priceRange?.startPrice;
+  const price = start?.currencyCode === "USD" && Number.isFinite(start.units)
+    ? Math.round(start.units * 100 + (start.nanos ?? 0) / 1e7) : null;
+  return {
+    id:place.id, venue:place.displayName, address:place.formattedAddress, pos,
+    area:place.shortFormattedAddress || place.formattedAddress.split(",")[0],
+    rating:place.rating, reviews:place.userRatingCount ?? 0, price, meal:25,
+    openingPeriods:place.currentOpeningHours?.periods ?? place.regularOpeningHours?.periods,
+    google:true, photo:place.photos?.[0], providers:place.attributions ?? []
+  };
+}
+
+function priceLevelsForBudget(budget) {
+  if (budget >= 7500) return ["EXPENSIVE", "VERY_EXPENSIVE"];
+  if (budget >= 3600) return ["MODERATE", "EXPENSIVE"];
+  if (budget >= 2500) return ["INEXPENSIVE", "MODERATE"];
+  return ["INEXPENSIVE"];
+}
+
+function matchesGoogleCuisine(place, cuisine) {
+  const allowedTypes = cuisine === "asian" ? asianPlaceTypes : googleCuisineTypes[cuisine];
+  if (!allowedTypes) return true;
+  if (allowedTypes.includes(place.primaryType)) return true;
+  if (specificCuisineTypes.has(place.primaryType)) return false;
+  return (place.types ?? []).some(type => allowedTypes.includes(type));
+}
+
+function hasBostonAddress(place) {
+  const component = type => (place.addressComponents ?? []).find(part => part.types?.includes(type));
+  const region = component("administrative_area_level_1");
+  const stateName = (region?.shortText ?? region?.longText ?? "").trim().toLowerCase();
+  if (stateName && stateName !== "ma" && stateName !== "massachusetts") return false;
+  const city = component("locality")?.longText ?? component("postal_town")?.longText ??
+    place.formattedAddress?.match(/,\s*([^,]+),\s*(?:MA|Massachusetts)(?=\s|,|$)/i)?.[1];
+  if (city?.trim()) return bostonLocalities.has(city.trim().toLowerCase());
+
+  const zip = component("postal_code")?.longText ?? place.formattedAddress?.match(/\b\d{5}(?=[-\s,]|$)/)?.[0];
+  return bostonPostalCodes.has(zip);
+}
+
+async function searchGoogleRestaurants({query, cuisine, cuisineLabel, budget}, higherPriceSearch = false) {
+  const {Place, PriceLevel} = await loadPlacesLibrary();
+  const cuisineType = googleCuisineTypes[cuisine]?.[0];
+  const request = {
+    textQuery:[query, cuisineLabel, cuisine === "bakery" ? "" : "restaurants"].filter(Boolean).join(" "),
+    ...(cuisine === "bakery" ? {} : {includedType:cuisineType ?? "restaurant", useStrictTypeFiltering:Boolean(cuisineType) || !query}),
+    ...(higherPriceSearch ? {priceLevels:priceLevelsForBudget(budget).map(level => PriceLevel[level])} : {}),
+    isOpenNow:true,
+    fields:["id", "displayName", "formattedAddress", "location", "businessStatus",
+      "rating", "userRatingCount", "priceRange", "photos", "attributions", "primaryType", "types",
+      "currentOpeningHours", "regularOpeningHours", "shortFormattedAddress", "addressComponents"],
+    maxResultCount:20,
+    language:"en-US",
+    region:"us"
+  };
+  const areas = higherPriceSearch
+    ? [{north:42.416,south:42.219,west:-71.196,east:-70.984}]
+    : bostonSearchAreas;
+  const responses = await Promise.allSettled(areas.map(locationRestriction =>
+    Place.searchByText({...request, locationRestriction})));
+  const successful = responses.filter(response => response.status === "fulfilled");
+  if (!successful.length) throw responses[0].reason;
+  const matching = successful.flatMap(response => response.value.places ?? [])
+    .filter(place => hasBostonAddress(place) && matchesGoogleCuisine(place, cuisine))
+    .map(googleRestaurant).filter(Boolean);
+  return {
+    places:[...new Map(matching.map(place => [place.id, place])).values()],
+    partial:successful.length < areas.length
+  };
+}
+
+function showLeg(endpoint, trip, returning) {
+  const data = returning ? trip.inbound : trip.outbound;
+  const name = escapeHtml(endpoint.name);
+  const route = returning ? `from the restaurant to ${name}` : `from ${name} to the restaurant`;
+  return data.transit ? `Take public transit ${route}. See the map for lines and transfers.` : `Walk ${route}.`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+}
+
+function mapsPlacePage(trip) {
+  const params = new URLSearchParams({api:"1", query:`${trip.venue}, ${trip.address}`});
+  if (trip.google) params.set("query_place_id", trip.id);
+  return "https://www.google.com/maps/search/?" + params;
+}
+
+function tripMetrics(trip, minutes, compact = false) {
+  const unknownPrice = trip.total === null;
+  const price = unknownPrice ? "Check price" : money(trip.total);
+  const prefix = trip.google && !unknownPrice ? "<small>From</small> " : "";
+  return `<span class="trip-metrics${compact ? " rank-metrics" : ""}">
+    <span class="trip-metric">
+      <span class="metric-label">${trip.fareUnknown ? "Est. before unknown fare" : "Est. per person"}</span>
+      <strong class="metric-value${unknownPrice ? " price-unknown" : ""}">${prefix}${price}</strong>
+    </span>
+    <span class="trip-metric trip-metric-time">
+      <span class="metric-label">${compact ? "Base trip time" : "Total time"}</span>
+      <strong class="metric-value${minutes === null ? " price-unknown" : ""}">${minutes === null ? "Check route" : `~${minutes} <small>min</small>`}</strong>
+    </span>
+  </span>`;
+}
+
+function venueKey(value) {
+  return value.normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function streetKey(address) {
+  const street = address.split(",")[0].toLowerCase()
+    .replace(/\b(avenue|street|road|boulevard|drive|square)\b/g, word => ({
+      avenue:"ave", street:"st", road:"rd", boulevard:"blvd", drive:"dr", square:"sq"
+    })[word]);
+  return venueKey(street);
+}
+
+async function fetchPlaceDetails(trip) {
+  const {Place} = await loadPlacesLibrary();
+  let placeId = trip.google ? trip.id : null;
+  if (!placeId) {
+    const {places = []} = await Place.searchByText({
+      textQuery:`${trip.venue}, ${trip.address}`,
+      fields:["id", "displayName", "formattedAddress"],
+      maxResultCount:5,
+      language:"en-US",
+      region:"us"
+    });
+    const name = venueKey(trip.venue);
+    const address = streetKey(trip.address);
+    const match = places.find(place => {
+      const candidate = venueKey(place.displayName ?? "");
+      return candidate && (name.includes(candidate) || candidate.includes(name)) &&
+        streetKey(place.formattedAddress ?? "") === address;
+    });
+    if (!match) return null;
+    placeId = match.id;
+  }
+  const place = new Place({id:placeId, requestedLanguage:"en-US"});
+  await place.fetchFields({fields:["photos", "reviews", "attributions", "currentOpeningHours", "regularOpeningHours"]});
+  return place;
+}
+
+const bostonWeekday = new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York", weekday:"long"});
+
+function renderOpeningHours(container, trip, place, pending = false, today = bostonWeekday.format(new Date())) {
+  const current = place?.currentOpeningHours?.weekdayDescriptions ?? [];
+  const regular = place?.regularOpeningHours?.weekdayDescriptions ?? [];
+  const readRows = descriptions => descriptions.filter(line => typeof line === "string" && line.trim())
+    .map(line => {
+      const match = line.trim().match(/^([a-z]+)\s*[:：]\s*(.+)$/i);
+      return match ? {day:match[1], hours:match[2]} : {day:"", hours:line};
+    });
+  const nextWeek = readRows(current);
+  const typicalWeek = readRows(regular);
+  const isToday = row => row.day.toLowerCase() === today.toLowerCase();
+  const currentToday = nextWeek.find(isToday);
+  const todayHours = currentToday ?? typicalWeek.find(isToday);
+  const schedule = nextWeek.length ? nextWeek : typicalWeek;
+  const todayIndex = nextWeek.findIndex(isToday);
+  const ordered = todayIndex > 0 ? [...schedule.slice(todayIndex), ...schedule.slice(0, todayIndex)] : schedule;
+  const source = creditMarkup("Check hours on Google Maps ↗", mapsPlacePage(trip));
+
+  container.innerHTML = `<div class="hours-today"><strong>${todayHours
+    ? (currentToday ? "Today’s hours" : "Today’s regular hours") : "Opening hours"}</strong>
+    <span>${todayHours ? escapeHtml(todayHours.hours) : pending ? "Loading…" : "Unavailable"}</span>
+    ${todayHours || pending || schedule.length ? "" : source}</div>
+    ${schedule.length ? `<details><summary>${nextWeek.length ? "Hours for the next 7 days" : "Regular weekly hours"}</summary>
+      <ul class="hours-list">${ordered.map(row => row.day
+        ? `<li><span>${escapeHtml(row.day)}</span><span class="hours-value">${escapeHtml(row.hours)}</span></li>`
+        : `<li><span class="hours-unparsed">${escapeHtml(row.hours)}</span></li>`).join("")}</ul>
+      ${source}</details>` : ""}`;
+}
+
+function renderPlaceMedia(container, place, trip, message = "") {
+  const savedPhoto = trip.google ? null : officialPhotos[trip.id];
+  const googlePhotos = place?.photos?.length ? place.photos : trip.photo ? [trip.photo] : [];
+  const photos = googlePhotos.map(photo => ({
+    photo,
+    credits:(photo.authorAttributions ?? []).map(person => creditMarkup(person.displayName, person.uri))
+  }));
+  if (!photos.length && savedPhoto) photos.push({
+    url:savedPhoto[0], credits:[creditMarkup(savedPhoto[3] ?? "Photo from the restaurant", savedPhoto[1])]
+  });
+  const reviews = (place?.reviews ?? []).slice(0, 5);
+  const providers = (place?.attributions ?? trip.providers ?? []).filter(item => item.provider)
+    .map(item => creditMarkup(item.provider, item.providerURI));
+  const reviewLink = creditMarkup("Read reviews on Google Maps ↗", mapsPlacePage(trip));
+  const firstReview = reviews[0];
+  const firstAuthor = firstReview?.authorAttribution?.displayName;
+  const firstRating = Number.isFinite(firstReview?.rating) ? `★ ${firstReview.rating.toFixed(1)}` : "";
+  const firstText = (firstReview?.text ?? "").replace(/\s+/g, " ").trim();
+  const excerpt = firstText.length > 140 ? firstText.slice(0, 139).trimEnd() + "…" : firstText;
+  container.innerHTML = `<div class="place-media-card">
+    <div class="media-preview${photos.length ? " has-photo" : ""}">
+    ${photos.length ? `<div><figure class="gallery-photo"><a data-photo-link target="_blank" rel="noopener" aria-label="Open photo in a new tab" hidden><img alt="" decoding="async" hidden></a><figcaption class="muted"></figcaption></figure>
+      <p class="muted" data-photo-status hidden>Photo unavailable.</p>
+      <div class="media-controls" ${photos.length === 1 ? "hidden" : ""}><button class="map-toggle" type="button" data-photo-prev aria-label="Previous photo">‹</button>
+      <span class="muted" data-photo-count role="status"></span><button class="map-toggle" type="button" data-photo-next aria-label="Next photo">›</button></div></div>` : ""}
+    <div class="review-preview"><h4>Reviews</h4>
+    ${googlePhotos.length || reviews.length || providers.length ? '<p class="maps-attribution" translate="no">Google Maps</p>' : ""}
+    ${firstReview ? `<p class="muted">${[firstRating, firstAuthor && escapeHtml(firstAuthor)].filter(Boolean).join(" · ")}</p>
+      ${excerpt ? `<p class="review-snippet">${escapeHtml(excerpt)}</p>` : ""}` :
+      `<p class="muted">${escapeHtml(message || "No Google Maps reviews available.")}</p>
+      <p class="muted">${reviewLink}</p>`}
+    </div></div>
+    ${reviews.length ? `<details class="review-details"><summary>${reviews.length === 1 ? "Read full review" : `Read ${reviews.length} reviews`}</summary>
+    <ul class="place-reviews">${reviews.map(review => {
+      const author = review.authorAttribution;
+      const name = author?.displayName ? creditMarkup(author.displayName, author.uri) : "Google Maps reviewer";
+      const avatar = /^https:\/\//i.test(author?.photoURI ?? "")
+        ? `<img src="${escapeHtml(author.photoURI)}" alt="" loading="lazy">` : "";
+      const time = review.relativePublishTimeDescription ? ` · ${escapeHtml(review.relativePublishTimeDescription)}` : "";
+      const rating = Number.isFinite(review.rating) ? ` · ★ ${review.rating.toFixed(1)}` : "";
+      const url = /^https:\/\//i.test(review.googleMapsURI ?? "") ? review.googleMapsURI : null;
+      return `<li><p class="review-author">${avatar}<strong>${name}</strong><span class="muted">${rating}${time}</span></p>
+        ${review.text ? `<p class="review-text">${escapeHtml(review.text)}</p>` : ""}
+        ${url ? `<p class="muted">${creditMarkup("Open this review ↗", url)}</p>` : ""}</li>`;
+    }).join("")}</ul></details>` : ""}
+    ${providers.length ? `<p class="muted">${providers.join(" · ")}</p>` : ""}</div>`;
+  if (!photos.length) return;
+
+  const image = container.querySelector(".gallery-photo img");
+  const photoLink = container.querySelector("[data-photo-link]");
+  const caption = container.querySelector("figcaption");
+  const status = container.querySelector("[data-photo-status]");
+  const count = container.querySelector("[data-photo-count]");
+  const prev = container.querySelector("[data-photo-prev]");
+  const next = container.querySelector("[data-photo-next]");
+  let index = 0;
+  const showPhoto = () => {
+    const item = photos[index];
+    let url = item.url;
+    try {
+      if (item.photo) url = item.photo.getURI({maxWidth:1000});
+    } catch {
+      url = undefined;
+    }
+    image.hidden = true;
+    photoLink.hidden = true;
+    caption.hidden = true;
+    const available = /^https:\/\//i.test(url ?? "");
+    status.hidden = available;
+    caption.innerHTML = item.credits.join(" · ");
+    image.alt = `Photo ${index + 1} of ${trip.venue}`;
+    if (available) {
+      image.src = url;
+      photoLink.href = url;
+      if (image.complete && image.naturalWidth) {
+        image.hidden = false;
+        photoLink.hidden = false;
+        caption.hidden = false;
+      }
+    } else {
+      image.removeAttribute("src");
+    }
+    count.textContent = `${index + 1} / ${photos.length}`;
+    prev.disabled = index === 0;
+    next.disabled = index === photos.length - 1;
+  };
+  image.addEventListener("load", () => {
+    image.hidden = false;
+    photoLink.hidden = false;
+    caption.hidden = false;
+    status.hidden = true;
+  });
+  image.addEventListener("error", () => {
+    if (savedPhoto && photos[index].photo && image.getAttribute("src") !== savedPhoto[0]) {
+      caption.innerHTML = creditMarkup(savedPhoto[3] ?? "Photo from the restaurant", savedPhoto[1]);
+      image.src = savedPhoto[0];
+      photoLink.href = savedPhoto[0];
+      return;
+    }
+    image.hidden = true;
+    photoLink.hidden = true;
+    caption.hidden = true;
+    status.hidden = false;
+  });
+  prev.addEventListener("click", () => { index--; showPhoto(); });
+  next.addEventListener("click", () => { index++; showPhoto(); });
+  showPhoto();
+}
+
+async function loadPlaceDetails(trip, loadDetails) {
+  const container = byId("place-media-content");
+  const hours = byId("opening-hours");
+  renderOpeningHours(hours, trip, null, true);
+  renderPlaceMedia(container, null, trip, loadDetails ? "Loading Google Maps photos and reviews…" : "Searching Google Maps…");
+  if (!loadDetails) return;
+  try {
+    const place = await fetchPlaceDetails(trip);
+    if (container.isConnected) {
+      renderOpeningHours(hours, trip, place);
+      renderPlaceMedia(container, place, trip, place ? "" : "Could not match this restaurant on Google Maps.");
+    }
+  } catch {
+    if (container.isConnected) {
+      renderOpeningHours(hours, trip, null);
+      renderPlaceMedia(container, null, trip, "Google Maps reviews could not load here. Open the restaurant listing to read them.");
+    }
+  }
+}
+
+const waitBuffers = new Map();
+
+function waitEstimate(trip) {
+  if (trip.minutes === null) return {minutes:null, total:null};
+  const minutes = waitBuffers.get(trip.id) ?? null;
+  return {minutes, total:trip.minutes + (minutes ?? 0)};
+}
+
+function renderWait(trip) {
+  const {minutes, total} = waitEstimate(trip);
+  const remaining = state.time - total;
+  const summary = byId("wait-summary");
+  byId("detail-cost-time").innerHTML = tripMetrics(trip, total);
+  summary.hidden = !minutes;
+  summary.textContent = minutes
+    ? `${minutes} min wait buffer included · ${remaining < 0 ? `${-remaining} min over your time limit` : `${remaining} min to spare`}.`
+    : "";
+  summary.classList.toggle("over-time", remaining < 0);
+  byId("nearby-activity").hidden = total === null || !(remaining >= trip.extra);
+}
+
+function wireWaitBuffer(trip) {
+  const buffer = byId("wait-buffer");
+  buffer.value = waitBuffers.get(trip.id) ?? "";
+  buffer.addEventListener("input", () => {
+    if (buffer.validity.badInput || !buffer.validity.valid) return;
+    if (buffer.valueAsNumber > 0) waitBuffers.set(trip.id, buffer.valueAsNumber);
+    else waitBuffers.delete(trip.id);
+    renderWait(trip);
+    renderDiagram(trip);
+  });
+  renderWait(trip);
+}
+
+function renderDetail(loadDetails = true) {
+  const detail = byId("detail");
+  const trip = selectedTrip();
+  detail.hidden = !trip;
+  if (!trip) return;
+  const placePage = escapeHtml(mapsPlacePage(trip));
+  const meal = trip.google ? "Estimated meal stop" : escapeHtml(trip.dish);
+  const fare = trip.fareUnknown
+    ? `${trip.fare ? `${money(trip.fare)} in known fares. ` : ""}Check Google Maps for unavailable transit fares.`
+    : `${money(trip.fare)} estimated transit fare.`;
+  const estimate = trip.total === null ? `Meal price unavailable. ${fare}`
+    : `${money(trip.price)} ${trip.google ? "starting meal estimate" : "meal"} + ${money(trip.reserve)} tax and tip reserve. ${fare}`;
+  detail.innerHTML = `<div class="detail-meta"><h2>${escapeHtml(trip.venue)}</h2><a href="${trip.google ? placePage : trip.ratingUrl}" target="_blank" rel="noopener">★ ${trip.rating.toFixed(1)} · ${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a></div><p>${trip.google ? "" : `${meal} · `}${escapeHtml(trip.address)}</p>
+    <div id="detail-cost-time"></div>
+    <p class="muted" id="cost-breakdown">${estimate}</p>
+    <div class="opening-hours" id="opening-hours" aria-live="polite"></div>
+    <ol><li><strong>Outbound · ${legTimeLabel(trip.outbound.minutes)}.</strong> ${showLeg(state.origin,trip,false)}</li>
+    <li><strong>Meal · ~${trip.meal} min.</strong> ${meal}.</li>
+    <li><strong>Return · ${legTimeLabel(trip.inbound.minutes)}.</strong> ${showLeg(state.end,trip,true)}</li></ol>
+    <p class="muted" id="nearby-activity" hidden>${trip.activity ? `<strong>Free activity nearby.</strong> ${trip.activity} (~${trip.extra} extra min).` : ""}</p>
+    <div class="links">${trip.menu ? `<a class="link" href="${trip.menu}" target="_blank" rel="noopener">Full menu ↗</a>` : ""}
+    <a class="link" href="${placePage}" target="_blank" rel="noopener">Open restaurant on Google Maps ↗</a></div>
+    <details class="detail-panel" open><summary>Photos &amp; reviews</summary><div id="place-media-content" aria-live="polite"></div></details>
+    <section class="detail-panel" aria-label="Wait buffer" ${trip.minutes === null ? "hidden" : ""}>
+      <label>Wait buffer (min)<input id="wait-buffer" type="number" min="0" max="120" step="1" placeholder="Optional"></label>
+      <p id="wait-summary" class="muted" role="status" hidden></p>
+    </section>`;
+  loadPlaceDetails(trip, loadDetails);
+  wireWaitBuffer(trip);
+}
+
+function selectedTrip() {
+  if (state.budgetPick?.id === state.selected) return state.budgetPick;
+  return [...state.ranked, ...state.previews].find(place => place.id === state.selected);
+}
+
+function legTimeLabel(minutes) {
+  return minutes === null ? "Time unavailable" : `~${minutes} min`;
+}
+
+const transitTimelines = new WeakMap();
+const transitPreviews = new WeakMap();
+
+function displayedLeg(trip, returning) {
+  const planned = returning ? trip.inbound : trip.outbound;
+  const active = activeLeg === (returning ? "return" : "outbound");
+  if (planned.transit || !active || mapMode !== "transit") return planned;
+  if (!transitPreviews.has(planned)) {
+    const afterMeal = (trip.outbound.minutes ?? 0) + trip.meal + (waitBuffers.get(trip.id) ?? 0);
+    transitPreviews.set(planned, {
+      transit:true, preview:true,
+      departureTime:returning ? new Date(Date.now() + afterMeal * 60000) : new Date()
+    });
+  }
+  return transitPreviews.get(planned);
+}
+
+const mbtaLineColors = {
+  red:"#DA291C", orange:"#ED8B00", blue:"#003DA5", green:"#00843D", silver:"#7C878E",
+  commuter:"#80276C", bus:"#FFC72C", ferry:"#008EAA"
+};
+
+function transitLineColor({color, name = "", shortName = "", vehicle} = {}) {
+  const hex = typeof color === "string" && color.trim().match(/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i)?.[1];
+  if (hex) return "#" + (hex.length === 3 ? [...hex].map(digit => digit.repeat(2)).join("") : hex);
+
+  const names = [name, shortName, vehicle?.name].join(" ");
+  const namedLine = names.match(/\b(red|orange|blue|green|silver)(?:\s+line\b|-[bcde]\b)/i);
+  if (namedLine) return mbtaLineColors[namedLine[1].toLowerCase()];
+  if (/^SL[1-5]$/i.test(shortName)) return mbtaLineColors.silver;
+  if (/\bbus\b/i.test(names) || /BUS$/.test(vehicle?.vehicleType ?? "")) return mbtaLineColors.bus;
+  if (/^[BCDE]$/i.test(shortName)) return mbtaLineColors.green;
+  if (/commuter (rail|train)/i.test(names) || vehicle?.vehicleType === "COMMUTER_TRAIN") return mbtaLineColors.commuter;
+  if (/\bferry\b/i.test(names) || vehicle?.vehicleType === "FERRY") return mbtaLineColors.ferry;
+  return "#707780";
+}
+
+function transitLabelColor(hex) {
+  const rgb = hex.slice(1).match(/../g).map(pair => parseInt(pair, 16) / 255);
+  const [r, g, b] = rgb.map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+  return .2126 * r + .7152 * g + .0722 * b > .179 ? "#000" : "#fff";
+}
+
+function transitStepMarkup(route) {
+  const steps = route?.legs?.flatMap(leg => leg.steps ?? []) ?? [];
+  if (!steps.some(step => step.transitDetails)) return "";
+
+  const segments = [];
+  for (const step of steps) {
+    const duration = Number.isFinite(step.staticDurationMillis) ? step.staticDurationMillis : null;
+    const previous = segments.at(-1);
+    if (step.travelMode === "WALKING" && previous?.mode === "WALKING") {
+      previous.duration = previous.duration === null || duration === null ? null : previous.duration + duration;
+    } else {
+      segments.push({mode:step.travelMode, duration, details:step.transitDetails});
+    }
+  }
+
+  let boarded = false;
+  return segments.map(({mode, duration, details}, index) => {
+    const time = duration > 0 ? `~${Math.ceil(duration / 60000)} min` : "";
+    if (mode === "WALKING") {
+      const walk = !boarded ? "Walk to the first stop"
+        : index === segments.length - 1 ? "Walk to your destination" : "Walk to the next stop";
+      return `<li class="route-segment route-walk">${[walk, time].filter(Boolean).join(" · ")}</li>`;
+    }
+
+    const action = boarded ? "Transfer here" : "Board here";
+    boarded = true;
+    const {transitLine, departureStop, arrivalStop, headsign, stopCount} = details ?? {};
+    const {shortName, name, vehicle} = transitLine ?? {};
+    let line = shortName || name || vehicle?.name || "Public transit";
+    if (vehicle?.name && /^[a-z]*\d+[a-z]?$/i.test(line)) line = `${vehicle.name} ${line}`;
+    const color = transitLineColor(transitLine ?? undefined);
+    const style = `--route-color:${color}`;
+    const direction = headsign ? ` toward ${headsign}` : "";
+    const stops = Number.isInteger(stopCount) && stopCount > 0 ? `${stopCount} ${stopCount === 1 ? "stop" : "stops"}` : "";
+    const board = departureStop?.name
+      ? `<li class="route-stop" style="${style}"><span>${action}</span>${escapeHtml(departureStop.name)}</li>` : "";
+    const exit = arrivalStop?.name
+      ? `<li class="route-stop" style="${style}"><span>Get off here</span>${escapeHtml(arrivalStop.name)}</li>` : "";
+    const ride = [`<strong class="route-line">${escapeHtml(line)}</strong>${escapeHtml(direction)}`, stops, time].filter(Boolean).join(" · ");
+    return `${board}<li class="route-segment" style="${style};--route-label-color:${transitLabelColor(color)}">${ride}</li>${exit}`;
+  }).join("");
+}
+
+async function loadTransitTimeline(trip, returning) {
+  const leg = displayedLeg(trip, returning);
+  if (!leg.transit || transitTimelines.has(leg)) return;
+
+  const endpoint = returning ? state.end : state.origin;
+  const origin = latLng(returning ? trip.pos : endpoint.pos);
+  const destination = latLng(returning ? endpoint.pos : trip.pos);
+  transitTimelines.set(leg, '<li class="route-segment">Loading stops and transfers…</li>');
+  try {
+    const {Route} = await window.google.maps.importLibrary("routes");
+    const {routes} = await Route.computeRoutes({
+      origin, destination, travelMode:"TRANSIT", language:"en-US", region:"us",
+      departureTime:leg.departureTime,
+      fields:["legs"]
+    });
+    const steps = transitStepMarkup(routes?.[0]);
+    transitTimelines.set(leg, steps || (routes?.length
+      ? '<li class="route-segment">Google Maps did not return stops for this route.</li>'
+      : '<li class="route-segment">Google Maps found no public transit route for this leg.</li>'));
+  } catch {
+    transitTimelines.set(leg, `<li class="route-segment">Could not load stops and transfers.
+      <button type="button" class="map-toggle route-retry" data-retry-leg="${returning ? "return" : "outbound"}">Retry</button></li>`);
+  }
+
+  const selected = selectedTrip();
+  if (selected && displayedLeg(selected, returning) === leg) renderDiagram(selected);
+}
+
+function renderRouteLeg(trip, location, returning) {
+  const data = displayedLeg(trip, returning);
+  const endpoint = {name:location.name, label:returning ? "Finish here" : "Start here"};
+  const restaurant = {name:trip.venue, label:returning ? "Leave restaurant" : "Arrive at restaurant"};
+  const start = returning ? restaurant : endpoint;
+  const finish = returning ? endpoint : restaurant;
+  const estimate = data.preview ? "Transit preview"
+    : `${legTimeLabel(data.minutes)} · ${data.cost === null ? "Fare unavailable" : money(data.cost)}`;
+  const steps = data.transit
+    ? transitTimelines.get(data) ?? '<li class="route-segment">Loading stops and transfers…</li>'
+    : `<li class="route-segment route-walk">${data.estimated ? "Estimated walk" : "Walk"}</li>`;
+  return `<section class="route-leg${returning ? " returning" : ""}" data-active="${activeLeg === (returning ? "return" : "outbound")}">
+    <h4>${returning ? "2. Return" : "1. Outbound"} <span>${estimate}</span></h4>
+    <ol class="route-steps" role="list">
+      <li class="route-stop"><span>${start.label}</span>${escapeHtml(start.name)}</li>
+      ${steps}
+      <li class="route-stop"><span>${finish.label}</span>${escapeHtml(finish.name)}</li>
+    </ol>
+  </section>`;
+}
+
+function renderDiagram(trip) {
+  const diagram = byId("diagram");
+  const summary = byId("map-trip-summary");
+  summary.hidden = !trip;
+  if (!trip) {
+    summary.replaceChildren();
+    diagram.innerHTML = '<p class="route-empty">Find a matching restaurant to see its route.</p>';
+    return;
+  }
+  const {minutes, total} = waitEstimate(trip);
+  summary.innerHTML = `<h3>${escapeHtml(trip.venue)}</h3>${tripMetrics(trip, total)}`;
+  const timing = total === null ? "Transit time is unavailable in the planner. Check the route on the map."
+    : `Includes ~${trip.meal} min for the meal${minutes === null ? "" : ` and ${minutes} min of wait buffer`}.`;
+  diagram.innerHTML = `<p class="muted route-timing">${timing}</p>
+    <div class="route-legs">${renderRouteLeg(trip,state.origin,false)}${renderRouteLeg(trip,state.end,true)}</div>`;
+}
+
+function routeViewport(frame, stationPosition, restaurantPosition) {
+  const center = stationPosition.map((value, index) => (value + restaurantPosition[index]) / 2);
+  const pixels = Math.min(frame.clientWidth || 320, frame.clientHeight || 320);
+  const meters = Math.max(400, distanceMeters(stationPosition, restaurantPosition) * 1.5);
+  const worldScale = 156543 * Math.cos(center[0] * Math.PI / 180);
+  const zoom = Math.min(17, Math.max(11, Math.floor(Math.log2(worldScale * pixels / meters))));
+  return {center:center.map(value => value.toFixed(6)).join(","), zoom};
+}
+
+function renderMap() {
+  const trip = selectedTrip();
+  const returning = activeLeg === "return";
+  const frame = byId("google-frame");
+  const directionsLink = byId("google-directions-link");
+
+  byId("map-outbound").setAttribute("aria-pressed",String(!returning));
+  byId("map-return").setAttribute("aria-pressed",String(returning));
+  for (const mode of ["recommended", "transit", "walking"]) {
+    byId("map-mode-" + mode).setAttribute("aria-pressed", String(mode === mapMode));
+  }
+  byId("leg-controls").hidden = !trip;
+  byId("google-embed").hidden = !trip;
+  byId("map-status").hidden = !trip;
+  if (trip) {
+    loadTransitTimeline(trip, false);
+    loadTransitTimeline(trip, true);
+  }
+  renderDiagram(trip);
+
+  if (!trip) {
+    directionsLink.removeAttribute("href");
+    frame.removeAttribute("src");
+    return;
+  }
+
+  const endpoint = returning ? state.end : state.origin;
+  const stop = endpoint.pos.join(",");
+  const origin = returning ? trip.address : stop;
+  const destination = returning ? stop : trip.address;
+  const leg = returning ? trip.inbound : trip.outbound;
+  const recommended = leg.transit ? "transit" : "walking";
+  const mode = mapMode === "recommended" ? recommended : mapMode;
+  byId("map-status").textContent = mode === recommended
+    ? (leg.minutes === null ? "Public transit map · check the route and travel time here."
+      : "Google Maps directions · travel times may differ from planner estimates.")
+    : `${mode === "transit" ? "Public transit" : "Walking"} map preview · the planner uses ${recommended === "transit" ? "public transit" : "walking"} for this leg.`;
+  const directions = new URLSearchParams({api:"1",origin,destination,travelmode:mode});
+  if (trip.google) directions.set(returning ? "origin_place_id" : "destination_place_id", trip.id);
+  if (endpoint.placeId) directions.set(returning ? "destination_place_id" : "origin_place_id", endpoint.placeId);
+  directionsLink.href = "https://www.google.com/maps/dir/?" + directions;
+
+  const viewport = routeViewport(frame, endpoint.pos, trip.pos);
+  const params = new URLSearchParams({key:googleEmbedKey,origin,destination,mode,region:"us", ...viewport});
+  if (trip.google) params.set(returning ? "origin" : "destination", "place_id:" + trip.id);
+  if (endpoint.placeId) params.set(returning ? "destination" : "origin", "place_id:" + endpoint.placeId);
+  const url = "https://www.google.com/maps/embed/v1/directions?" + params;
+  frame.title = `Google Maps ${returning ? "return" : "outbound"} directions for ${trip.venue}`;
+  if (frame.getAttribute("src") !== url) frame.setAttribute("src",url);
+}
+
+function creditMarkup(name, url) {
+  const label = escapeHtml(name);
+  return /^https:\/\//i.test(url ?? "")
+    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${label}</a>` : label;
+}
+
+function createTripRow(trip, position = null) {
+  const row = document.createElement("li");
+  const savedPhoto = trip.google ? null : officialPhotos[trip.id];
+  let photoURL = savedPhoto?.[0];
+  try {
+    if (trip.photo) photoURL = trip.photo.getURI({maxWidth:176});
+  } catch {
+    photoURL = undefined;
+  }
+  const hasPhoto = /^https:\/\//i.test(photoURL ?? "");
+  const authors = hasPhoto
+    ? (trip.photo?.authorAttributions ?? []).map(person => creditMarkup(person.displayName, person.uri)) : [];
+  if (savedPhoto) authors.push(creditMarkup(savedPhoto[3] ?? "Photo from the restaurant", savedPhoto[1]));
+  const providers = (trip.providers ?? []).filter(item => item.provider).map(item => creditMarkup(item.provider, item.providerURI));
+  const reviewsURL = escapeHtml(trip.google ? mapsPlacePage(trip) : trip.ratingUrl);
+  row.innerHTML = `<button type="button" class="rank-row${position === null ? " budget-row" : ""}" data-id="${escapeHtml(trip.id)}" aria-pressed="${state.selected === trip.id}">
+    ${position === null ? "" : `<span class="rank">${position}</span>`}
+    <span class="rank-photo">${hasPhoto ? `<img src="${escapeHtml(photoURL)}" alt="" loading="lazy" decoding="async">` : "No photo"}</span>
+    <span class="rank-copy"><span class="venue">${escapeHtml(trip.venue)}</span><span class="muted">${escapeHtml(trip.area)}</span></span>
+    <span class="score">★ ${trip.rating.toFixed(1)}</span>
+    ${tripMetrics(trip, trip.minutes, true)}</button>
+    <a class="rating-link" href="${reviewsURL}" target="_blank" rel="noopener">${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a>
+    ${authors.length ? `<p class="rank-credit photo-credit">${authors.join(" · ")}</p>` : ""}
+    ${providers.length ? `<p class="rank-credit">${providers.join(" · ")}</p>` : ""}`;
+  row.querySelector("img")?.addEventListener("error", event => {
+    event.currentTarget.parentElement.textContent = "No photo";
+    const credit = row.querySelector(".photo-credit");
+    if (credit) credit.hidden = true;
+  });
+  row.querySelector("button").addEventListener("click",() => selectTrip(trip.id));
+  return row;
+}
+
+function renderRankings(trips, {origin, end, time, budget, previousBudget}, googleResults, status, loadDetails = true, keepSelection = false) {
+  const timedTrips = trips.filter(trip => trip.minutes !== null);
+  const ranked = timedTrips.slice(0, 10);
+  const previews = trips.filter(trip => trip.minutes === null).slice(0, 3);
+  const budgetPick = higherBudgetPick(timedTrips, previousBudget);
+  const oldSelection = state.selected;
+  const keepCurrent = keepSelection && (budgetPick?.id === oldSelection || [...ranked, ...previews].some(trip => trip.id === oldSelection));
+  const selected = keepCurrent ? oldSelection : (ranked[0] ?? previews[0])?.id ?? null;
+  Object.assign(state,{origin,end,time,ranked,previews,budgetPick,selected});
+  byId("result-status").textContent = status;
+  byId("rank-attribution").hidden = !googleResults;
+  const empty = byId("empty");
+  empty.hidden = !!ranked.length || !!previews.length || !loadDetails || !googleResults;
+  empty.textContent = "No Boston restaurants in these results fit your travel mode, budget, time, and opening hours.";
+
+  const budgetPanel = byId("budget-pick");
+  budgetPanel.hidden = previousBudget === null || !loadDetails || (!googleResults && !budgetPick);
+  const budgetList = byId("budget-pick-list");
+  budgetList.replaceChildren();
+  if (!budgetPanel.hidden) {
+    const range = `above ${money(previousBudget)} and up to ${money(budget)}`;
+    byId("budget-pick-status").textContent = budgetPick
+      ? `Estimated cost per person ${range}.`
+      : `No open restaurants with an estimated cost ${range}.`;
+    if (budgetPick) budgetList.append(createTripRow(budgetPick));
+  }
+
+  byId("ranks").replaceChildren(...ranked.map((trip,index) => createTripRow(trip, index + 1)));
+  byId("route-previews").hidden = !previews.length;
+  byId("route-preview-list").replaceChildren(...previews.map(trip => createTripRow(trip)));
+  if (!keepCurrent) {
+    renderDetail(loadDetails);
+    renderMap();
+  }
+}
+
+function watchOpeningHours({places, walkingEstimates, transitUnverified, partial}, preferences) {
+  let lastIds;
+  const update = () => {
+    const ranked = rankTrips(places, preferences);
+    const ids = JSON.stringify(ranked.map(trip => trip.id));
+    if (ids === lastIds) return;
+    const timedCount = ranked.filter(trip => trip.minutes !== null).length;
+    const transitNotice = transitUnverified ? " Some transit estimates are unavailable. Use Public transit above the map to view routes." : "";
+    const walkNotice = walkingEstimates ? " Some walking times are estimates." : "";
+    const coverageNotice = partial ? " Some Boston areas did not load." : "";
+    renderRankings(ranked, preferences, true,
+      `Showing ${Math.min(10, timedCount)} of ${timedCount} Boston ${timedCount === 1 ? "match" : "matches"} within your time limit · highest rated first.${coverageNotice}${transitNotice}${walkNotice}`,
+      true, lastIds !== undefined);
+    lastIds = ids;
+  };
+  update();
+  if (places.length) openingHoursTimer = setInterval(update, 60000);
+}
+
+async function planBostonRankings(candidates, preferences, sequence) {
+  const byRating = [...candidates].sort(compareRatings);
+  const planned = {places:[], walkingEstimates:false, transitUnverified:false};
+  const batchSize = 20;
+  for (let offset = 0; offset < byRating.length; offset += batchSize) {
+    const batch = await planRoutes(byRating.slice(offset, offset + batchSize), preferences);
+    if (sequence !== searchSequence) return null;
+    planned.places.push(...batch.places);
+    planned.walkingEstimates ||= batch.walkingEstimates;
+    planned.transitUnverified ||= batch.transitUnverified;
+
+    const timed = rankTrips(planned.places, preferences).filter(trip => trip.minutes !== null);
+    if (timed.length >= 10 &&
+        (preferences.previousBudget === null || higherBudgetPick(timed, preferences.previousBudget))) break;
+    if (preferences.travelMode === "transit" && batch.transitUnverified && !batch.transitRequestSucceeded) break;
+  }
+  return planned;
+}
+
+async function refresh() {
+  if (!googleEmbedKey) {
+    byId("result-status").textContent = "Add a Google Maps key in maps-config.js to search restaurants and view routes.";
+    return;
+  }
+  clearInterval(openingHoursTimer);
+  mapMode = "recommended";
+  const sequence = ++searchSequence;
+  const cuisine = byId("cuisine");
+  const budget = Math.round(byId("budget").valueAsNumber * 100);
+  const originText = byId("origin").value.trim();
+  const endText = byId("return").value.trim();
+  if (budget > lastBudget) previousBudget = lastBudget;
+  else if (budget < lastBudget) previousBudget = null;
+  lastBudget = budget;
+  const preferences = {
+    origin:state.origin,
+    end:state.end,
+    travelMode:byId("travel-mode").value,
+    budget,
+    previousBudget,
+    time:byId("time").valueAsNumber,
+    cuisine:cuisine.value,
+    cuisineLabel:cuisine.value === "any" ? "" : cuisine.selectedOptions[0].textContent,
+    query:byId("restaurant-query").value.trim()
+  };
+  if (originText === locationLabel && !deviceOrigin) {
+    renderRankings([], preferences, false, "Allow location access or choose a Boston starting point.");
+    return;
+  }
+  const saved = rankTrips(savedPlaces(preferences), preferences);
+  renderRankings(saved, preferences, false, "Checking locations…", false);
+
+  try {
+    const originRequest = originText ? resolveEndpoint(originText, deviceOrigin) : Promise.resolve(null);
+    const [origin, end] = await Promise.all([
+      originRequest, !endText || endText === originText ? originRequest : resolveEndpoint(endText)
+    ]);
+    if (sequence !== searchSequence) return;
+    if (!origin || !end) {
+      renderRankings([], preferences, false,
+        `Could not find the ${origin ? "after-meal" : "start"} location. Enter a full Boston-area address or choose a Boston place.`);
+      return;
+    }
+    Object.assign(preferences, {origin, end});
+    byId("result-status").textContent = "Searching neighborhoods across Boston…";
+    const search = await searchGoogleRestaurants(preferences);
+    if (sequence !== searchSequence) return;
+    let places = search.places;
+    const mealNearBudget = places.some(place => {
+      const mealWithTax = place.price === null ? 0 : place.price + Math.round(place.price * .20);
+      return mealWithTax > preferences.previousBudget && mealWithTax >= budget * .8 && mealWithTax <= budget;
+    });
+    if (preferences.previousBudget !== null && !mealNearBudget) {
+      const additional = await searchGoogleRestaurants(preferences, true).catch(() => ({places:[]}));
+      if (sequence !== searchSequence) return;
+      const combined = new Map([...places, ...additional.places].map(place => [place.id, place]));
+      places = [...combined.values()];
+    }
+    const currentMinute = bostonWeekMinute(new Date());
+    const candidates = places.filter(place => place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute) &&
+      place.meal <= preferences.time && (place.price === null || place.price + Math.round(place.price * .20) <= budget));
+    if (candidates.length) byId("result-status").textContent = "Calculating travel times…";
+    const planned = await planBostonRankings(candidates, preferences, sequence);
+    if (!planned || sequence !== searchSequence) return;
+    watchOpeningHours({...planned, partial:search.partial}, preferences);
+  } catch {
+    if (sequence !== searchSequence) return;
+    renderRankings(saved, preferences, false,
+      "Google Maps search is unavailable. Opening hours could not be verified.");
+  }
+}
+
+byId("location-options").innerHTML = bostonPlaces
+  .map(place => `<option value="${escapeHtml(place.name)}"></option>`).join("");
+const bostonOptions = '<option value="">Boston places</option>' + bostonPlaces.map(place =>
+  `<option value="${escapeHtml(place.name)}">${escapeHtml(place.name)} · ${escapeHtml(place.address.split(",")[0])}</option>`).join("");
+for (const field of ["origin", "return"]) {
+  const input = byId(field);
+  const shortcut = byId(field + "-place");
+  shortcut.innerHTML = bostonOptions;
+  shortcut.addEventListener("change", () => {
+    if (!shortcut.value) return;
+    input.value = shortcut.value;
+    input.dispatchEvent(new Event("input", {bubbles:true}));
+  });
+  input.addEventListener("input", () => {
+    shortcut.value = bostonPlaces.some(place => place.name === input.value) ? input.value : "";
+  });
+}
+const originInput = byId("origin");
+originInput.addEventListener("input", () => {
+  if (originInput.value !== locationLabel) deviceOrigin = null;
+  byId("location-status").textContent = "";
+});
+
+function requestLocation() {
+  const button = byId("use-location");
+  const status = byId("location-status");
+  if (!navigator.geolocation) {
+    status.textContent = "Location is unavailable here. Enter a start address.";
+    return;
+  }
+  const previousValue = originInput.value;
+  button.disabled = true;
+  status.textContent = "Checking your location…";
+  navigator.geolocation.getCurrentPosition(({coords}) => {
+    button.disabled = false;
+    if (originInput.value !== previousValue) return;
+    const pos = [coords.latitude, coords.longitude];
+    if (!pos.every(Number.isFinite) || distanceMeters(pos, bostonCenter) > 35000) {
+      status.textContent = "Enter a start address in the Boston area.";
+      return;
+    }
+    deviceOrigin = {name:locationLabel, pos};
+    originInput.value = locationLabel;
+    originInput.dispatchEvent(new Event("input", {bubbles:true}));
+    status.textContent = "Location set.";
+    refresh();
+  }, () => {
+    button.disabled = false;
+    if (originInput.value === previousValue) status.textContent = "Could not access your location. Enter a start address.";
+  }, {timeout:8000, maximumAge:60000});
+}
+byId("use-location").addEventListener("click", requestLocation);
+byId("planner").addEventListener("submit",event => {
+  event.preventDefault();
+  refresh();
+  byId("results-heading").focus();
+});
+byId("map-outbound").addEventListener("click",() => {
+  activeLeg = "outbound";
+  renderMap();
+});
+byId("map-return").addEventListener("click",() => {
+  activeLeg = "return";
+  renderMap();
+});
+byId("diagram").addEventListener("click", event => {
+  const retry = event.target.closest("[data-retry-leg]");
+  const trip = selectedTrip();
+  if (!retry || !trip) return;
+  transitTimelines.delete(displayedLeg(trip, retry.dataset.retryLeg === "return"));
+  renderMap();
+});
+for (const mode of ["recommended", "transit", "walking"]) {
+  byId("map-mode-" + mode).addEventListener("click", () => {
+    mapMode = mode;
+    renderMap();
+  });
+}
+if (googleEmbedKey && originInput.value.trim() === locationLabel) requestLocation();
+else refresh();
+</script>
+</body>
+</html>
