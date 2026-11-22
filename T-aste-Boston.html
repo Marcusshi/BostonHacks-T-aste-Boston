@@ -362,7 +362,7 @@ function walkingLegBetween(item, from, to) {
 }
 
 function mealEstimate(price) {
-  return price === null ? null : price + Math.round(price * .20);
+  return Number.isFinite(price) ? price + Math.round(price * .20) : null;
 }
 
 async function planRoutes(places, {origin, end, travelMode, budget, time, departureTime = new Date()}, isCurrent = () => true) {
@@ -499,13 +499,18 @@ const rankingOrders = {
 
 function tripTotals(place, outbound, inbound) {
   const meal = mealEstimate(place.price);
-  const fare = (outbound.cost ?? 0) + (inbound.cost ?? 0);
-  const knownMinutes = (outbound.minutes ?? 0) + place.meal + (inbound.minutes ?? 0);
+  const knownFares = [outbound.cost, inbound.cost].filter(Number.isFinite);
+  const knownFare = knownFares.reduce((sum, cost) => sum + cost, 0);
+  const fareUnknown = knownFares.length < 2;
+  const budgetVerified = meal !== null && !fareUnknown;
+  const knownCost = (meal ?? 0) + knownFare;
+  const legMinutes = [outbound.minutes, inbound.minutes].filter(Number.isFinite);
+  const knownMinutes = legMinutes.reduce((sum, minutes) => sum + minutes, place.meal);
   return {
-    fare, fareUnknown:outbound.cost === null || inbound.cost === null,
+    knownFare, fareUnknown, budgetVerified, knownCost,
     reserve:meal === null ? null : meal - place.price,
-    total:meal === null ? null : meal + fare,
-    knownMinutes, minutes:outbound.minutes === null || inbound.minutes === null ? null : knownMinutes
+    total:budgetVerified ? knownCost : null,
+    knownMinutes, minutes:legMinutes.length === 2 && Number.isFinite(knownMinutes) ? knownMinutes : null
   };
 }
 
@@ -513,27 +518,42 @@ function hasKnownRouteData(leg) {
   return Number.isFinite(leg.cost) && Number.isFinite(leg.minutes) && !leg.estimated;
 }
 
-function rankTrips(places, {budget, time, sortBy = "rating", strictSearch = false}, now = new Date()) {
+function compareTripRoutes(a, b) {
+  const durationA = a.minutes ?? Infinity;
+  const durationB = b.minutes ?? Infinity;
+  if (durationA !== durationB) return durationA - durationB;
+  if (a.budgetVerified !== b.budgetVerified) return a.budgetVerified ? -1 : 1;
+  if (a.knownCost !== b.knownCost) return a.knownCost - b.knownCost;
+  const transitLegs = trip => Number(trip.outbound.transit) + Number(trip.inbound.transit);
+  return transitLegs(a) - transitLegs(b);
+}
+
+function rankTrips(places, {budget, time, travelMode = "auto", sortBy = "rating", strictSearch = false,
+  includeTransitPreviews = false}, now = new Date()) {
   if (!Number.isFinite(budget) || !Number.isFinite(time)) return [];
+  const showPreviews = includeTransitPreviews && travelMode === "transit" && !strictSearch;
   const currentMinute = bostonWeekMinute(now);
   return places
     .filter(place => place.routeOptions?.length && place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute))
     .flatMap(({routeOptions, ...place}) => {
       if (strictSearch && !Number.isFinite(place.price)) return [];
-      const eligible = routeOptions.flatMap(({outbound, inbound}) => {
+      const candidates = routeOptions.flatMap(({outbound, inbound}) => {
+        if (travelMode === "walking" && (outbound.transit || inbound.transit)) return [];
+        if (travelMode === "transit" && (!outbound.transit || !inbound.transit)) return [];
         if (strictSearch && (!hasKnownRouteData(outbound) || !hasKnownRouteData(inbound))) return [];
         const totals = tripTotals(place, outbound, inbound);
-        if ((totals.total ?? totals.fare) > budget || totals.knownMinutes > time) return [];
-        if (outbound.minutes !== null) {
+        if (totals.knownCost > budget || totals.knownMinutes > time) return [];
+        if (totals.minutes === null && !showPreviews) return [];
+        if (Number.isFinite(outbound.minutes)) {
           const arrival = new Date((place.departureTime ?? now).getTime() + outbound.minutes * 60000);
           if (!isOpenAt(place.openingPeriods, bostonWeekMinute(arrival))) return [];
         }
-        return [{...place, outbound, inbound, ...totals}];
+        return [{...place, outbound, inbound, travelMode, ...totals}];
       });
-      // A route with an unknown fare remains an option if no priced route fits.
-      eligible.sort((a, b) => Number(a.fareUnknown) - Number(b.fareUnknown) ||
-        (a.minutes ?? Infinity) - (b.minutes ?? Infinity) || a.fare - b.fare);
-      return eligible.slice(0, 1);
+      const eligible = candidates.filter(trip => trip.minutes !== null);
+      if (eligible.length) return eligible.sort(compareTripRoutes).slice(0, 1);
+      // Untimed public transit options are displayed only in the preview section.
+      return showPreviews ? candidates.sort(compareTripRoutes).slice(0, 1) : [];
     })
     .sort(rankingOrders[sortBy].compare);
 }
@@ -541,7 +561,7 @@ function rankTrips(places, {budget, time, sortBy = "rating", strictSearch = fals
 function higherBudgetPick(trips, previousBudget) {
   if (previousBudget === null) return null;
   return trips.reduce((best, trip) => {
-    return trip.minutes !== null && !trip.fareUnknown && trip.total !== null && trip.total > (best?.total ?? previousBudget) ? trip : best;
+    return trip.minutes !== null && trip.total !== null && trip.total > (best?.total ?? previousBudget) ? trip : best;
   }, null);
 }
 
@@ -708,17 +728,20 @@ function mapsPlacePage(trip) {
   return "https://www.google.com/maps/search/?" + params;
 }
 
+function tripModes(trip) {
+  return `${trip.outbound.transit ? "Transit" : "Walk"} → Restaurant → ${trip.inbound.transit ? "Transit" : "Walk"}`;
+}
+
 function tripMetrics(trip, minutes, compact = false) {
-  const unknownPrice = trip.total === null;
-  const price = unknownPrice ? "Check price" : money(trip.total);
-  const prefix = trip.google && !unknownPrice ? "<small>From</small> " : "";
+  const price = trip.budgetVerified || trip.knownCost > 0 ? money(trip.knownCost) : "Check price";
+  const prefix = trip.google && trip.budgetVerified ? "<small>From</small> " : "";
   return `<span class="trip-metrics${compact ? " rank-metrics" : ""}">
     <span class="trip-metric">
-      <span class="metric-label">${trip.fareUnknown ? "Est. before unknown fare" : "Est. per person"}</span>
-      <strong class="metric-value${unknownPrice ? " price-unknown" : ""}">${prefix}${price}</strong>
+      <span class="metric-label">${trip.budgetVerified ? "Est. per person" : "Known costs · budget unverified"}</span>
+      <strong class="metric-value${trip.budgetVerified ? "" : " price-unknown"}">${prefix}${price}</strong>
     </span>
     <span class="trip-metric trip-metric-time">
-      <span class="metric-label">Total time</span>
+      <span class="metric-label">Total time incl. stay</span>
       <strong class="metric-value${minutes === null ? " price-unknown" : ""}">${minutes === null ? "Check route" : `~${minutes} <small>min</small>`}</strong>
     </span>
   </span>`;
@@ -930,16 +953,21 @@ function renderDetail(loadDetails = true) {
   const placePage = escapeHtml(mapsPlacePage(trip));
   const dish = trip.google ? "" : escapeHtml(trip.dish);
   const fare = trip.fareUnknown
-    ? `${trip.fare ? `${money(trip.fare)} in known fares. ` : ""}Check Google Maps for unavailable transit fares.`
-    : `${money(trip.fare)} estimated transit fare.`;
-  const costBreakdown = trip.total === null ? `Meal price unavailable. ${fare}`
+    ? `${trip.knownFare ? `${money(trip.knownFare)} in known fares. ` : ""}Check Google Maps for unavailable transit fares.`
+    : `${money(trip.knownFare)} estimated transit fare.`;
+  const costBreakdown = trip.reserve === null ? `Meal price unavailable. ${fare}`
     : `${money(trip.price)} ${trip.google ? "starting meal estimate" : "meal"} + ${money(trip.reserve)} tax and tip reserve. ${fare}`;
+  const budgetWarning = trip.travelMode === "auto"
+    ? "Fastest available route. Some costs are unavailable, so budget compatibility is not fully verified."
+    : "Some costs are unavailable, so budget compatibility is not fully verified.";
   const departure = trip.inbound.departureTime;
   const showActivity = trip.activity && trip.minutes !== null && state.time - trip.minutes >= trip.extra;
   detail.innerHTML = `<div class="detail-meta"><h2>${escapeHtml(trip.venue)}</h2><a href="${trip.google ? placePage : trip.ratingUrl}" target="_blank" rel="noopener">★ ${trip.rating.toFixed(1)} · ${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a></div><p>${dish ? `${dish} · ` : ""}${escapeHtml(trip.address)}</p>
     <div id="detail-cost-time">${tripMetrics(trip, trip.minutes)}</div>
+    ${trip.budgetVerified ? "" : `<p class="muted">${budgetWarning}</p>`}
     <p class="muted" id="cost-breakdown">${escapeHtml(costBreakdown)}</p>
     <div class="opening-hours" id="opening-hours" aria-live="polite"></div>
+    <p><strong>${tripModes(trip)}</strong></p>
     <ol><li><strong>Outbound · ${legTimeLabel(trip.outbound.minutes)}.</strong> ${showLeg(state.origin,trip,false)}</li>
     <li><strong>Restaurant stay · ${trip.meal} min.</strong></li>
     <li><strong>Return · ${legTimeLabel(trip.inbound.minutes)}.</strong>
@@ -1084,7 +1112,7 @@ function renderRouteLeg(trip, location, returning) {
   const start = returning ? restaurant : endpoint;
   const finish = returning ? endpoint : restaurant;
   const estimate = data.preview ? "Transit preview"
-    : `${legTimeLabel(data.minutes)} · ${data.cost === null ? "Fare unavailable" : money(data.cost)}`;
+    : `${legTimeLabel(data.minutes)} · ${Number.isFinite(data.cost) ? money(data.cost) : "Fare unavailable"}`;
   const timing = data.departureTime ? `Leave around ${bostonTripClock.format(data.departureTime)}` : "";
   const transitStatus = data.departureTime ? "Loading stops and transfers…" : "Departure time unavailable.";
   const steps = data.transit
@@ -1199,7 +1227,7 @@ function createTripRow(trip, position = null) {
   row.innerHTML = `<button type="button" class="rank-row${position === null ? " budget-row" : ""}" data-id="${escapeHtml(trip.id)}" aria-pressed="${state.selected === trip.id}">
     ${position === null ? "" : `<span class="rank">${position}</span>`}
     <span class="rank-photo">${hasPhoto ? `<img src="${escapeHtml(photoURL)}" alt="" loading="lazy" decoding="async">` : "No photo"}</span>
-    <span class="rank-copy"><span class="venue">${escapeHtml(trip.venue)}</span><span class="muted">${escapeHtml(trip.area)}</span></span>
+    <span class="rank-copy"><span class="venue">${escapeHtml(trip.venue)}</span><span class="muted">${escapeHtml(trip.area)}</span><span class="muted">${tripModes(trip)}</span></span>
     <span class="score">★ ${trip.rating.toFixed(1)}</span>
     ${tripMetrics(trip, trip.minutes, true)}</button>
     <a class="rating-link" href="${reviewsURL}" target="_blank" rel="noopener">${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a>
@@ -1257,7 +1285,7 @@ function renderRankings(trips, {origin, end, time, budget, previousBudget, stric
 function watchOpeningHours({places, transitUnverified, partial}, preferences, keepSelection = false) {
   let lastResults;
   const update = () => {
-    const ranked = rankTrips(places, preferences);
+    const ranked = rankTrips(places, {...preferences, includeTransitPreviews:true});
     const results = JSON.stringify(ranked.map(trip => [trip.id, trip.outbound.transit, trip.inbound.transit]));
     if (results === lastResults) return;
     const timedCount = ranked.filter(trip => trip.minutes !== null).length;
