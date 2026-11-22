@@ -170,3 +170,40 @@ test("walking and transit modes stay restricted, and untimed trips are transit p
   assert.equal(rank([untimed], preview)[0].minutes, null);
   assert.equal(rank([untimed], {...preview, strictSearch:true}).length, 0);
 });
+
+test("scheduled searches include Places candidates that are not open now", async () => {
+  const {app} = loadApp();
+  const requests = [];
+  app.loadPlacesLibrary = async () => ({Place:{searchByText:async request => {
+    requests.push(request);
+    return {places:[]};
+  }}});
+  const filters = {query:"", cuisine:"korean", cuisineLabel:"Korean", budget:3000};
+
+  await app.searchGoogleRestaurants(filters);
+  assert.ok(requests.length > 0);
+  assert.ok(requests.every(request => request.isOpenNow === true));
+  requests.length = 0;
+
+  await app.searchGoogleRestaurants({...filters, scheduledDeparture:new Date("2026-11-22T17:00:00Z")});
+  assert.ok(requests.length > 0);
+  assert.ok(requests.every(request => !Object.hasOwn(request, "isOpenNow")));
+});
+
+test("a planned Boston departure uses arrival hours and respects special closures", () => {
+  const morning = new Date("2026-11-22T12:30:00Z");
+  const noon = app.parseBostonDeparture("2026-11-22T12:00", morning);
+  const hours = [{open:{day:0, hour:12, minute:15}, close:{day:0, hour:22}}];
+  const early = route(transit(10), walk(10));
+  const afterOpening = route(walk(20), walk(10));
+  const place = restaurant([early, afterOpening], {
+    hoursCheckedAt:morning, currentOpeningPeriods:hours, regularOpeningPeriods:hours
+  });
+
+  assert.equal(noon.toISOString(), "2026-11-22T17:00:00.000Z");
+  assert.equal(app.rankTrips([place], preferences, morning).length, 0);
+  assert.equal(app.rankTrips([place], {...preferences, scheduledDeparture:noon}, morning)[0].outbound,
+    afterOpening.outbound);
+  const specialClosure = {...place, currentOpeningPeriods:[]};
+  assert.equal(app.rankTrips([specialClosure], {...preferences, scheduledDeparture:noon}, morning).length, 0);
+});

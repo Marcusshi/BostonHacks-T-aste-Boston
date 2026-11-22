@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2 (2026-11-22)
+
+- Added an optional departure date and time in Boston time. Scheduled searches check whether restaurants will be open at the estimated arrival and use the planned times for outbound and return transit. Leave the field blank to search for a trip departing now.
+
 ## 1.1 (2026-11-21)
 
 - Added Highest rated, Popular, and Balanced restaurant sorting. Popular uses review count. Balanced combines a rating adjusted for review volume with a capped popularity score.

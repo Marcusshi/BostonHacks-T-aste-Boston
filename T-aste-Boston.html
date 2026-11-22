@@ -68,6 +68,7 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
 .detail .place-reviews{list-style:none;margin:0;padding:0}.detail .place-reviews li{border-top:1px solid var(--line);padding:9px 0}.place-reviews a{color:var(--ink)}.review-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .review-author{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.review-author img{width:26px;height:26px;border-radius:50%;object-fit:cover}
 .ranking-sort{margin-top:9px;max-width:230px}
+.departure-setting{max-width:290px;margin-top:12px}
 .search-actions{display:flex;align-items:end;gap:12px;margin-top:12px}.search-actions label{flex:1}
 .strict-search{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 9px;margin-top:10px}
 .strict-search label{display:inline-flex;align-items:center;gap:6px}
@@ -111,6 +112,10 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
 <label>Travel mode<select id="travel-mode"><option value="auto">Fastest (walk or transit)</option><option value="transit">Public transit</option><option value="walking">Walking</option></select></label>
 <label>Craving<select id="cuisine"><option value="any">Anything</option><option value="asian">Any Asian cuisine</option><option value="korean">Korean</option><option value="chinese">Chinese</option><option value="japanese">Japanese</option><option value="thai">Thai</option><option value="vietnamese">Vietnamese</option><option value="mediterranean">Mediterranean</option><option value="mexican">Mexican</option><option value="american">American</option><option value="noodles">Noodles & ramen</option><option value="dumplings">Dumplings</option><option value="fried-chicken">Fried chicken</option><option value="burgers">Burgers</option><option value="bakery">Coffee & bakery</option><option value="vegetarian">Vegetarian options</option></select></label>
 </div>
+<label class="departure-setting">Departure (Boston time)
+  <input id="departure-time" type="datetime-local" aria-describedby="departure-help">
+  <span id="departure-help" class="muted">Leave blank to depart now.</span>
+</label>
 <div class="search-actions"><label>Restaurant or dish (optional)<input id="restaurant-query" type="search" maxlength="100" placeholder="e.g. ramen or Tatte" autocomplete="off"></label><button type="submit">Find restaurants</button></div>
 <div class="strict-search">
   <label><input id="strict-search" type="checkbox" aria-describedby="strict-search-description"> Strict search</label>
@@ -139,7 +144,7 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
   <ol class="ranks" id="ranks"></ol><p class="empty" id="empty" hidden></p>
   <aside class="budget-pick" id="route-previews" aria-labelledby="route-previews-heading" hidden>
     <h3 id="route-previews-heading">Transit previews</h3>
-    <p class="muted">Open now. Check the map for travel times before choosing.</p>
+    <p class="muted">Travel time could not be verified. Check the map before choosing.</p>
     <ul class="ranks" id="route-preview-list"></ul>
   </aside>
 </section>
@@ -365,7 +370,7 @@ function mealEstimate(price) {
   return Number.isFinite(price) ? price + Math.round(price * .20) : null;
 }
 
-async function planRoutes(places, {origin, end, travelMode, budget, time, departureTime = new Date()}, isCurrent = () => true) {
+async function planRoutes(places, {origin, end, travelMode, budget, time, scheduledDeparture, departureTime = new Date()}, isCurrent = () => true) {
   if (!places.length) return {places};
   let transitUnverified = false;
   let transitRequestSucceeded = false;
@@ -398,6 +403,8 @@ async function planRoutes(places, {origin, end, travelMode, budget, time, depart
       const timeBeforeReturn = (outbound.minutes ?? 0) + place.meal;
       const costBeforeReturn = (mealEstimate(place.price) ?? 0) + (outbound.cost ?? 0);
       if (timeBeforeReturn > time || costBeforeReturn > budget) return [];
+      if (scheduledDeparture && outbound.minutes !== null &&
+          !isRestaurantOpenAt(place, afterMinutes(departureTime, outbound.minutes))) return [];
       const option = {outbound};
       if (includeTransit && outbound.minutes !== null) {
         // Planned durations use whole minutes from a shared trip start.
@@ -439,23 +446,56 @@ async function planRoutes(places, {origin, end, travelMode, budget, time, depart
     const walk = includeWalking ? walkingLegBetween(walkingBack?.rows?.[index]?.items?.[0], place.pos, end.pos) : null;
     const routeOptions = options.flatMap(({outbound, transitBack}) =>
       [walk, transitBack].filter(Boolean).map(inbound => ({outbound, inbound})));
-    return routeOptions.length ? [{...place, departureTime, routeOptions}] : [];
+    return routeOptions.length ? [{...place, departureTime, scheduledDeparture, routeOptions}] : [];
   });
   return {places:planned, transitUnverified, transitRequestSucceeded};
 }
 
 const minutesPerDay = 24 * 60;
+const millisecondsPerDay = minutesPerDay * 60000;
 const weekDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const bostonClock = new Intl.DateTimeFormat("en-US", {
-  timeZone:"America/New_York", weekday:"short", hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+  timeZone:"America/New_York", year:"numeric", month:"2-digit", day:"2-digit",
+  weekday:"short", hour:"2-digit", minute:"2-digit", hourCycle:"h23"
 });
 const bostonTripClock = new Intl.DateTimeFormat("en-US", {
   timeZone:"America/New_York", hour:"numeric", minute:"2-digit"
 });
+const bostonDepartureLabel = new Intl.DateTimeFormat("en-US", {
+  timeZone:"America/New_York", month:"short", day:"numeric", hour:"numeric", minute:"2-digit"
+});
+
+function bostonClockParts(date) {
+  return Object.fromEntries(bostonClock.formatToParts(date).map(part => [part.type, part.value]));
+}
+
+function bostonInputValue(date) {
+  const {year, month, day, hour, minute} = bostonClockParts(date);
+  return `${year}-${month}-${day}T${hour}:${minute}`;
+}
+
+function parseBostonDeparture(value, now) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const wallTime = Date.parse(`${value}Z`);
+  if (!Number.isFinite(wallTime)) return null;
+  // Try both nearby UTC offsets so the round trip handles daylight saving changes.
+  const possibleTimes = [-millisecondsPerDay, millisecondsPerDay].map(delta => {
+    const sample = wallTime + delta;
+    const offset = Date.parse(`${bostonInputValue(new Date(sample))}Z`) - sample;
+    return new Date(wallTime - offset);
+  }).sort((a, b) => a - b);
+  const currentMinute = Math.floor(now.getTime() / 60000) * 60000;
+  const departure = possibleTimes.find(date => date >= currentMinute && bostonInputValue(date) === value);
+  return departure ? new Date(Math.max(departure.getTime(), now.getTime())) : null;
+}
+
+function afterMinutes(date, minutes) {
+  return new Date(date.getTime() + minutes * 60000);
+}
 
 function bostonWeekMinute(date) {
-  const parts = Object.fromEntries(bostonClock.formatToParts(date).map(part => [part.type, part.value]));
-  return weekDayNames.indexOf(parts.weekday) * minutesPerDay + Number(parts.hour) * 60 + Number(parts.minute);
+  const {weekday, hour, minute} = bostonClockParts(date);
+  return weekDayNames.indexOf(weekday) * minutesPerDay + Number(hour) * 60 + Number(minute);
 }
 
 function openingPointMinute(point) {
@@ -475,6 +515,29 @@ function isOpenAt(periods, minute) {
     if (!Number.isFinite(end) || end === start) return false;
     return end < start ? minute >= start || minute < end : minute >= start && minute < end;
   });
+}
+
+function currentHoursCover(date, checkedAt) {
+  const dayNumber = time => Date.parse(bostonInputValue(time).slice(0, 10)) / millisecondsPerDay;
+  const daysAhead = dayNumber(date) - dayNumber(checkedAt);
+  return daysAhead >= 0 && daysAhead < 7;
+}
+
+function restaurantPeriodsAt(place, date) {
+  if (place.currentOpeningPeriods && place.hoursCheckedAt && currentHoursCover(date, place.hoursCheckedAt)) {
+    return place.currentOpeningPeriods;
+  }
+  return place.regularOpeningPeriods ?? place.openingPeriods ?? [];
+}
+
+function isRestaurantOpenAt(place, date) {
+  return isOpenAt(restaurantPeriodsAt(place, date), bostonWeekMinute(date));
+}
+
+function opensOnDate(place, date) {
+  const day = Math.floor(bostonWeekMinute(date) / minutesPerDay);
+  const periods = restaurantPeriodsAt(place, date);
+  return isOpenAt(periods, day * minutesPerDay) || periods.some(period => period.open?.day === day);
 }
 
 function compareRatings(a, b) {
@@ -529,12 +592,11 @@ function compareTripRoutes(a, b) {
 }
 
 function rankTrips(places, {budget, time, travelMode = "auto", sortBy = "rating", strictSearch = false,
-  includeTransitPreviews = false}, now = new Date()) {
+  includeTransitPreviews = false, scheduledDeparture}, now = new Date()) {
   if (!Number.isFinite(budget) || !Number.isFinite(time)) return [];
   const showPreviews = includeTransitPreviews && travelMode === "transit" && !strictSearch;
-  const currentMinute = bostonWeekMinute(now);
   return places
-    .filter(place => place.routeOptions?.length && place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute))
+    .filter(place => place.routeOptions?.length && (scheduledDeparture || isRestaurantOpenAt(place, now)))
     .flatMap(({routeOptions, ...place}) => {
       if (strictSearch && !Number.isFinite(place.price)) return [];
       const candidates = routeOptions.flatMap(({outbound, inbound}) => {
@@ -545,8 +607,8 @@ function rankTrips(places, {budget, time, travelMode = "auto", sortBy = "rating"
         if (totals.knownCost > budget || totals.knownMinutes > time) return [];
         if (totals.minutes === null && !showPreviews) return [];
         if (Number.isFinite(outbound.minutes)) {
-          const arrival = new Date((place.departureTime ?? now).getTime() + outbound.minutes * 60000);
-          if (!isOpenAt(place.openingPeriods, bostonWeekMinute(arrival))) return [];
+          const arrival = afterMinutes(place.departureTime ?? scheduledDeparture ?? now, outbound.minutes);
+          if (!isRestaurantOpenAt(place, arrival)) return [];
         }
         return [{...place, outbound, inbound, travelMode, ...totals}];
       });
@@ -630,7 +692,7 @@ function loadPlacesLibrary() {
   return placesLibrary;
 }
 
-function googleRestaurant(place) {
+function googleRestaurant(place, hoursCheckedAt = new Date()) {
   if (!place.id || !place.displayName || !place.formattedAddress || !place.location ||
       !Number.isFinite(place.rating) || place.businessStatus === "CLOSED_PERMANENTLY" ||
       place.businessStatus === "CLOSED_TEMPORARILY" || place.businessStatus === "FUTURE_OPENING") return null;
@@ -646,7 +708,9 @@ function googleRestaurant(place) {
     area:place.shortFormattedAddress || place.formattedAddress.split(",")[0],
     rating:place.rating, reviews:Number.isFinite(place.userRatingCount) ? Math.max(0, place.userRatingCount) : 0,
     price,
-    openingPeriods:place.currentOpeningHours?.periods ?? place.regularOpeningHours?.periods,
+    currentOpeningPeriods:place.currentOpeningHours?.periods,
+    regularOpeningPeriods:place.regularOpeningHours?.periods,
+    hoursCheckedAt,
     google:true, photo:place.photos?.[0], providers:place.attributions ?? []
   };
 }
@@ -679,14 +743,14 @@ function hasBostonAddress(place) {
   return bostonPostalCodes.has(zip);
 }
 
-async function searchGoogleRestaurants({query, cuisine, cuisineLabel, budget}, higherPriceSearch = false) {
+async function searchGoogleRestaurants({query, cuisine, cuisineLabel, budget, scheduledDeparture}, higherPriceSearch = false) {
   const {Place, PriceLevel} = await loadPlacesLibrary();
   const cuisineType = googleCuisineTypes[cuisine]?.[0];
   const request = {
     textQuery:[query, cuisineLabel, cuisine === "bakery" ? "" : "restaurants"].filter(Boolean).join(" "),
     ...(cuisine === "bakery" ? {} : {includedType:cuisineType ?? "restaurant", useStrictTypeFiltering:Boolean(cuisineType) || !query}),
     ...(higherPriceSearch ? {priceLevels:priceLevelsForBudget(budget).map(level => PriceLevel[level])} : {}),
-    isOpenNow:true,
+    ...(!scheduledDeparture ? {isOpenNow:true} : {}),
     fields:["id", "displayName", "formattedAddress", "location", "businessStatus",
       "rating", "userRatingCount", "priceRange", "photos", "attributions", "primaryType", "types",
       "currentOpeningHours", "regularOpeningHours", "shortFormattedAddress", "addressComponents"],
@@ -697,13 +761,14 @@ async function searchGoogleRestaurants({query, cuisine, cuisineLabel, budget}, h
   const areas = higherPriceSearch
     ? [{north:42.416,south:42.219,west:-71.196,east:-70.984}]
     : bostonSearchAreas;
+  const hoursCheckedAt = new Date();
   const responses = await Promise.allSettled(areas.map(locationRestriction =>
     Place.searchByText({...request, locationRestriction})));
   const successful = responses.filter(response => response.status === "fulfilled");
   if (!successful.length) throw responses[0].reason;
   const matching = successful.flatMap(response => response.value.places ?? [])
     .filter(place => hasBostonAddress(place) && matchesGoogleCuisine(place, cuisine))
-    .map(googleRestaurant).filter(Boolean);
+    .map(place => googleRestaurant(place, hoursCheckedAt)).filter(Boolean);
   return {
     places:[...new Map(matching.map(place => [place.id, place])).values()],
     partial:successful.length < areas.length
@@ -788,8 +853,11 @@ async function fetchPlaceDetails(trip) {
 
 const bostonWeekday = new Intl.DateTimeFormat("en-US", {timeZone:"America/New_York", weekday:"long"});
 
-function renderOpeningHours(container, trip, place, pending = false, today = bostonWeekday.format(new Date())) {
-  const current = place?.currentOpeningHours?.weekdayDescriptions ?? [];
+function renderOpeningHours(container, trip, place, pending = false, now = new Date()) {
+  const visit = trip.scheduledDeparture
+    ? afterMinutes(trip.scheduledDeparture, trip.outbound.minutes ?? 0) : now;
+  const visitDay = bostonWeekday.format(visit);
+  const current = currentHoursCover(visit, now) ? place?.currentOpeningHours?.weekdayDescriptions ?? [] : [];
   const regular = place?.regularOpeningHours?.weekdayDescriptions ?? [];
   const readRows = descriptions => descriptions.filter(line => typeof line === "string" && line.trim())
     .map(line => {
@@ -798,18 +866,20 @@ function renderOpeningHours(container, trip, place, pending = false, today = bos
     });
   const nextWeek = readRows(current);
   const typicalWeek = readRows(regular);
-  const isToday = row => row.day.toLowerCase() === today.toLowerCase();
-  const currentToday = nextWeek.find(isToday);
-  const todayHours = currentToday ?? typicalWeek.find(isToday);
+  const isVisitDay = row => row.day.toLowerCase() === visitDay.toLowerCase();
+  const currentVisit = nextWeek.find(isVisitDay);
+  const visitHours = currentVisit ?? typicalWeek.find(isVisitDay);
   const schedule = nextWeek.length ? nextWeek : typicalWeek;
-  const todayIndex = nextWeek.findIndex(isToday);
-  const ordered = todayIndex > 0 ? [...schedule.slice(todayIndex), ...schedule.slice(0, todayIndex)] : schedule;
+  const visitIndex = schedule.findIndex(isVisitDay);
+  const ordered = visitIndex > 0 ? [...schedule.slice(visitIndex), ...schedule.slice(0, visitIndex)] : schedule;
   const source = creditMarkup("Check hours on Google Maps ↗", mapsPlacePage(trip));
+  const hoursLabel = trip.scheduledDeparture
+    ? `${currentVisit ? "" : "Regular "}${visitDay} hours`
+    : currentVisit ? "Today’s hours" : "Today’s regular hours";
 
-  container.innerHTML = `<div class="hours-today"><strong>${todayHours
-    ? (currentToday ? "Today’s hours" : "Today’s regular hours") : "Opening hours"}</strong>
-    <span>${todayHours ? escapeHtml(todayHours.hours) : pending ? "Loading…" : "Unavailable"}</span>
-    ${todayHours || pending || schedule.length ? "" : source}</div>
+  container.innerHTML = `<div class="hours-today"><strong>${visitHours ? hoursLabel : "Opening hours"}</strong>
+    <span>${visitHours ? escapeHtml(visitHours.hours) : pending ? "Loading…" : "Unavailable"}</span>
+    ${visitHours || pending || schedule.length ? "" : source}</div>
     ${schedule.length ? `<details><summary>${nextWeek.length ? "Hours for the next 7 days" : "Regular weekly hours"}</summary>
       <ul class="hours-list">${ordered.map(row => row.day
         ? `<li><span>${escapeHtml(row.day)}</span><span class="hours-value">${escapeHtml(row.hours)}</span></li>`
@@ -1296,13 +1366,15 @@ function watchOpeningHours({places, transitUnverified, partial}, preferences, ke
     const walkNotice = walkingEstimates ? " Some walking times are estimates." : "";
     const coverageNotice = partial ? " Some Boston areas did not load." : "";
     const strictNotice = preferences.strictSearch ? " Strict search is on." : "";
+    const departureNotice = preferences.scheduledDeparture
+      ? ` Depart ${bostonDepartureLabel.format(preferences.scheduledDeparture)} (Boston time).` : "";
     renderRankings(ranked, preferences, true,
-      `Showing ${Math.min(10, timedCount)} of ${timedCount} Boston ${timedCount === 1 ? "match" : "matches"} within your time limit · ${rankingOrders[preferences.sortBy].label}.${strictNotice}${coverageNotice}${transitNotice}${walkNotice}`,
+      `Showing ${Math.min(10, timedCount)} of ${timedCount} Boston ${timedCount === 1 ? "match" : "matches"} within your time limit · ${rankingOrders[preferences.sortBy].label}.${departureNotice}${strictNotice}${coverageNotice}${transitNotice}${walkNotice}`,
       true, keepSelection || lastResults !== undefined);
     lastResults = results;
   };
   update();
-  if (places.length) openingHoursTimer = setInterval(update, 60000);
+  if (places.length && !preferences.scheduledDeparture) openingHoursTimer = setInterval(update, 60000);
 }
 
 async function planBostonRankings(search, preferences, sequence) {
@@ -1355,7 +1427,11 @@ async function refresh() {
     return;
   }
   const stay = byId("stay-minutes");
-  if (!stay.reportValidity()) return;
+  const departureInput = byId("departure-time");
+  if (!stay.reportValidity() || !departureInput.reportValidity()) return;
+  const now = new Date();
+  const departureValue = departureInput.value;
+  const scheduledDeparture = departureValue ? parseBostonDeparture(departureValue, now) : null;
   clearInterval(openingHoursTimer);
   currentSearch = null;
   mapMode = "recommended";
@@ -1375,11 +1451,21 @@ async function refresh() {
     previousBudget,
     time:byId("time").valueAsNumber,
     stayMinutes:stay.valueAsNumber,
+    scheduledDeparture,
     strictSearch:byId("strict-search").checked,
     cuisine:cuisine.value,
     cuisineLabel:cuisine.value === "any" ? "" : cuisine.selectedOptions[0].textContent,
     query:byId("restaurant-query").value.trim()
   };
+  if (departureValue && !scheduledDeparture) {
+    renderRankings([], preferences, false, "Choose a valid departure time in Boston that has not passed.");
+    return;
+  }
+  if (scheduledDeparture && preferences.travelMode !== "walking" &&
+      afterMinutes(scheduledDeparture, preferences.time).getTime() > now.getTime() + 100 * millisecondsPerDay) {
+    renderRankings([], preferences, false, "For transit, choose a trip that ends within the next 100 days.");
+    return;
+  }
   if (preferences.stayMinutes > preferences.time) {
     renderRankings([], preferences, false, "Your restaurant stay exceeds your available trip time.");
     return;
@@ -1417,12 +1503,16 @@ async function refresh() {
       const combined = new Map([...places, ...additional.places].map(place => [place.id, place]));
       places = [...combined.values()];
     }
-    const currentMinute = bostonWeekMinute(new Date());
-    const candidates = places
-      .filter(place => place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute) &&
-        (mealEstimate(place.price) ?? 0) <= budget)
+    const lookupTime = new Date();
+    const lastPossibleArrival = scheduledDeparture && afterMinutes(scheduledDeparture, preferences.time - preferences.stayMinutes);
+    const candidates = places.filter(place => {
+      if ((mealEstimate(place.price) ?? 0) > budget) return false;
+      return scheduledDeparture
+        ? opensOnDate(place, scheduledDeparture) || opensOnDate(place, lastPossibleArrival)
+        : isRestaurantOpenAt(place, lookupTime);
+    })
       .map(place => ({...place, meal:preferences.stayMinutes}));
-    preferences.departureTime = new Date();
+    preferences.departureTime = scheduledDeparture ?? lookupTime;
     currentSearch = {candidates, preferences, partial:search.partial, routeCache:new Map(), transitUnverified:false};
     await showSearchRankings(currentSearch, sequence);
   } catch {
