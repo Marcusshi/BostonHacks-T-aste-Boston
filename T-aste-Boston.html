@@ -9,7 +9,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--dark);font:16px/1.45 system-ui,sans-serif}.wrap{width:min(1280px,calc(100% - 48px));margin:auto}
 header{background:#fff;border-top:7px solid var(--red);border-bottom:1px solid var(--line)}.nav{min-height:61px;display:flex;align-items:center;justify-content:space-between;gap:12px}.nav strong{color:var(--ink);font-weight:800;letter-spacing:-.035em}.nav span{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:750}.nav span{color:var(--muted);text-align:right}
 .hero{background:var(--red);color:#fff;padding:27px 0 37px}.hero h1{margin:3px 0 9px;font-size:clamp(40px,6vw,78px);letter-spacing:-.075em;line-height:1.02}.hero p{margin:0;color:#fff4f4}
-main{padding:22px 0 38px}form,.module,.detail{background:white;border:1px solid var(--line);border-radius:15px;min-width:0}form{padding:17px 18px;margin-bottom:20px}.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:12px}label{display:grid;gap:5px;font-size:13px;font-weight:750}input,select,button{color:inherit;font:inherit}input,select{width:100%;min-height:43px;border:1px solid #cbbdba;border-radius:8px;background:#fff;padding:8px}
+main{padding:22px 0 38px}form,.module,.detail{background:white;border:1px solid var(--line);border-radius:15px;min-width:0}form{padding:17px 18px;margin-bottom:20px}.fields{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;gap:12px}label{display:grid;gap:5px;font-size:13px;font-weight:750}input,select,button{color:inherit;font:inherit}input,select{width:100%;min-height:43px;border:1px solid #cbbdba;border-radius:8px;background:#fff;padding:8px}
 button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;border:1px solid var(--red);background:var(--red);color:white;text-decoration:none;display:inline-block}.link{background:#fff;color:var(--ink);border-color:#e9c4c4;font-size:13px}button:hover,.link:hover{filter:brightness(.94)}:focus-visible{outline:3px solid #94242a;outline-offset:3px}.hint,.muted{color:var(--muted);font-size:13px}.hint{margin:9px 0 0}
 .layout{display:grid;grid-template-columns:minmax(265px,.78fr) minmax(0,1.55fr);gap:18px;align-items:start}.module{overflow:hidden}.module-head{padding:15px 17px 11px}.module-head h2,.detail h2{margin:0;font-size:22px;letter-spacing:-.035em}.module-head p{margin:4px 0 0}.ranks{list-style:none;padding:0;margin:0}.ranks li{border-top:1px solid var(--line);padding:3px 14px 9px}.rank-row{display:grid;grid-template-columns:30px 56px minmax(0,1fr) auto;gap:9px;align-items:center;text-align:left;width:100%;background:#fff;color:var(--dark);border:1px solid transparent;padding:9px 5px}.rank-row[aria-pressed=true]{background:#fff0f0;border-color:#f1cccc}.rank{min-width:27px;height:27px;border-radius:50%;display:grid;place-items:center;color:var(--ink);background:#fce6e6;font-size:13px}.venue{font-weight:800}.score{color:var(--ink);white-space:nowrap}.rating-link{color:var(--muted);font-size:12px;margin-left:45px}.empty{padding:0 17px 17px;margin:0;color:var(--muted)}
 .map-controls{padding:9px 15px;display:flex;gap:13px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px}
@@ -67,8 +67,11 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
 @media(max-width:450px){.media-preview.has-photo{grid-template-columns:minmax(76px,105px) minmax(0,1fr);column-gap:10px}}
 .detail .place-reviews{list-style:none;margin:0;padding:0}.detail .place-reviews li{border-top:1px solid var(--line);padding:9px 0}.place-reviews a{color:var(--ink)}.review-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .review-author{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.review-author img{width:26px;height:26px;border-radius:50%;object-fit:cover}
-#wait-buffer{max-width:160px}.over-time{color:var(--ink);font-weight:700}
+.ranking-sort{margin-top:9px;max-width:230px}
 .search-actions{display:flex;align-items:end;gap:12px;margin-top:12px}.search-actions label{flex:1}
+.strict-search{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 9px;margin-top:10px}
+.strict-search label{display:inline-flex;align-items:center;gap:6px}
+.strict-search input{width:1rem;height:1rem;min-height:0;margin:0;accent-color:var(--red)}
 .endpoint-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
 .endpoint-fields label{min-width:0}
 .endpoint-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:6px}
@@ -104,14 +107,30 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
 <div class="fields">
 <label>Budget per person ($)<input id="budget" required type="number" min="0" max="999" step="0.01" value="32"></label>
 <label>Time available (min)<input id="time" required type="number" min="1" max="480" value="120"></label>
+<label>Restaurant stay (min)<input id="stay-minutes" required type="number" min="0" max="480" step="1" value="25"></label>
 <label>Travel mode<select id="travel-mode"><option value="auto">Fastest (walk or transit)</option><option value="transit">Public transit</option><option value="walking">Walking</option></select></label>
 <label>Craving<select id="cuisine"><option value="any">Anything</option><option value="asian">Any Asian cuisine</option><option value="korean">Korean</option><option value="chinese">Chinese</option><option value="japanese">Japanese</option><option value="thai">Thai</option><option value="vietnamese">Vietnamese</option><option value="mediterranean">Mediterranean</option><option value="mexican">Mexican</option><option value="american">American</option><option value="noodles">Noodles & ramen</option><option value="dumplings">Dumplings</option><option value="fried-chicken">Fried chicken</option><option value="burgers">Burgers</option><option value="bakery">Coffee & bakery</option><option value="vegetarian">Vegetarian options</option></select></label>
 </div>
 <div class="search-actions"><label>Restaurant or dish (optional)<input id="restaurant-query" type="search" maxlength="100" placeholder="e.g. ramen or Tatte" autocomplete="off"></label><button type="submit">Find restaurants</button></div>
-<p class="hint">Budget and time cover the meal and both legs. Leave the after-meal address blank to return to the start.</p></form>
+<div class="strict-search">
+  <label><input id="strict-search" type="checkbox" aria-describedby="strict-search-description"> Strict search</label>
+  <span id="strict-search-description" class="muted">Require a meal price, known fares, and travel times from Google Maps.</span>
+</div>
+<p class="hint">Budget covers the meal and fares. Available time includes your restaurant stay and both travel legs. Leave the after-meal address blank to return to the start.</p></form>
 <div class="layout">
 <section class="module" aria-labelledby="results-heading">
-  <div class="module-head"><h2 id="results-heading" tabindex="-1">Restaurant rankings</h2><p class="muted" id="result-status" role="status"></p><p class="maps-attribution" id="rank-attribution" translate="no" hidden>Google Maps</p></div>
+  <div class="module-head">
+    <h2 id="results-heading" tabindex="-1">Restaurant rankings</h2>
+    <label class="ranking-sort">Sort by
+      <select id="ranking-sort">
+        <option value="rating">Highest rated</option>
+        <option value="popular">Popular</option>
+        <option value="balanced">Balanced</option>
+      </select>
+    </label>
+    <p class="muted" id="result-status" role="status"></p>
+    <p class="maps-attribution" id="rank-attribution" translate="no" hidden>Google Maps</p>
+  </div>
   <aside class="budget-pick" id="budget-pick" aria-labelledby="budget-pick-heading" hidden>
     <h3 id="budget-pick-heading">Higher-budget pick</h3>
     <p class="muted" id="budget-pick-status"></p>
@@ -145,7 +164,7 @@ button,.link{cursor:pointer;border-radius:8px;padding:9px 12px;font-weight:700;b
 </section>
 <section class="detail" id="detail" aria-label="Selected trip" hidden></section>
 </div></div>
-<details class="sources"><summary>Data and estimates</summary><p class="muted">Google Maps searches multiple areas across Boston. The planner checks your full trip time for those results and shows up to ten that fit, sorted by rating and then review count. Trip costs use Google’s starting meal price, a 20% tax and tip estimate, and fares when available. The transit option can include buses, subway, light rail, commuter rail, and other scheduled service in Google Maps. The planner assumes a 25-minute meal and uses an approximate departure time for return transit. Check current service, prices, and hours before leaving.</p><p><a href="https://www.mbta.com/alerts" target="_blank" rel="noopener">MBTA service alerts</a></p></details>
+<details class="sources"><summary>Data and estimates</summary><p class="muted">Google Maps searches multiple areas across Boston. The planner shows up to ten restaurants that fit your trip limits. Popular sorts by review count. Balanced favors high ratings supported by more reviews. Trip costs use Google’s starting meal price, a 20% tax and tip estimate, and fares when available. The transit option can include buses, subway, light rail, commuter rail, and other scheduled service in Google Maps. Return transit is checked for the estimated time you leave the restaurant, based on your planned stay. Check current service, prices, and hours before leaving.</p><p><a href="https://www.mbta.com/alerts" target="_blank" rel="noopener">MBTA service alerts</a></p></details>
 </main>
 <script src="./maps-config.js"></script>
 <script>
@@ -321,76 +340,117 @@ function routeMatrixLeg(item, departureTime) {
   return {transit, cost, minutes:Math.ceil(item.durationMillis / 60000), departureTime};
 }
 
-async function planRoutes(places, {origin, end, travelMode}) {
-  if (!places.length) return {places};
-  let RouteMatrix;
+async function fetchRouteMatrix(origins, destinations, departureTime) {
   try {
     await loadPlacesLibrary();
-    ({RouteMatrix} = await window.google.maps.importLibrary("routes"));
+    const {RouteMatrix} = await window.google.maps.importLibrary("routes");
+    const {matrix} = await RouteMatrix.computeRouteMatrix({
+      origins, destinations, region:"us", language:"en-US",
+      fields:departureTime ? ["condition", "durationMillis", "localizedValues"] : ["condition", "durationMillis"],
+      travelMode:departureTime ? "TRANSIT" : "WALKING",
+      ...(departureTime ? {departureTime} : {})
+    });
+    return matrix;
   } catch {
-    // The directions map can still show transit when the Routes library is unavailable.
+    return null;
   }
+}
 
+function walkingLegBetween(item, from, to) {
+  if (item?.condition === "ROUTE_NOT_FOUND") return null;
+  return routeMatrixLeg(item) ?? estimatedWalkingLeg(from, to);
+}
+
+function mealEstimate(price) {
+  return price === null ? null : price + Math.round(price * .20);
+}
+
+async function planRoutes(places, {origin, end, travelMode, budget, time, departureTime = new Date()}, isCurrent = () => true) {
+  if (!places.length) return {places};
   let transitUnverified = false;
   let transitRequestSucceeded = false;
-  const waypoints = places.map(place => latLng(place.pos));
-  const routeLegs = async (returning, departureTime) => {
-    const request = async (mode) => {
-      const transit = mode === "TRANSIT";
-      try {
-        if (!RouteMatrix) return null;
-        const {matrix} = await RouteMatrix.computeRouteMatrix({
-          origins:returning ? waypoints : [latLng(origin.pos)],
-          destinations:returning ? [latLng(end.pos)] : waypoints,
-          fields:transit ? ["condition", "durationMillis", "localizedValues"] : ["condition", "durationMillis"],
-          travelMode:mode, region:"us", language:"en-US",
-          ...(transit ? {departureTime} : {})
-        });
-        if (transit) transitRequestSucceeded = true;
-        return places.map((_, index) => returning ? matrix.rows[index]?.items[0] : matrix.rows[0]?.items[index]);
-      } catch {
-        return null;
-      }
-    };
+  const includeWalking = travelMode !== "transit";
+  const includeTransit = travelMode !== "walking";
+  const readTransit = (item, departure) => {
+    const leg = routeMatrixLeg(item, departure);
+    if (leg || item?.condition === "ROUTE_NOT_FOUND") return leg;
+    transitUnverified = true;
+    return travelMode === "transit" ? {transit:true, minutes:null, cost:null, departureTime:departure} : null;
+  };
 
-    const [walking, transit] = await Promise.all([
-      travelMode === "transit" ? [] : request("WALKING"),
-      travelMode === "walking" ? [] : request("TRANSIT")
-    ]);
-    return places.map((place, index) => {
-      const transitLeg = routeMatrixLeg(transit?.[index], departureTime);
-      const missingTransit = travelMode !== "walking" && !transitLeg && transit?.[index]?.condition !== "ROUTE_NOT_FOUND";
-      if (missingTransit) transitUnverified = true;
-      if (travelMode === "transit") {
-        return transitLeg ?? (missingTransit ? {transit:true, minutes:null, cost:null, departureTime} : null);
-      }
+  const start = [latLng(origin.pos)];
+  const finish = [latLng(end.pos)];
+  const restaurants = places.map(place => latLng(place.pos));
+  const [walkingOut, transitOut] = await Promise.all([
+    includeWalking ? fetchRouteMatrix(start, restaurants) : null,
+    includeTransit ? fetchRouteMatrix(start, restaurants, departureTime) : null
+  ]);
+  if (!isCurrent()) return {places:[]};
+  transitRequestSucceeded = Boolean(transitOut);
+  const returnGroups = new Map();
 
-      const walkingLeg = routeMatrixLeg(walking?.[index]);
-      if (transitLeg && (!walkingLeg || transitLeg.minutes < walkingLeg.minutes)) return transitLeg;
-      if (walkingLeg) return walkingLeg;
-      if (walking?.[index]?.condition === "ROUTE_NOT_FOUND") return null;
-      return returning ? estimatedWalkingLeg(place.pos, end.pos) : estimatedWalkingLeg(origin.pos, place.pos);
+  const viable = places.flatMap((place, index) => {
+    const outboundOptions = [];
+    if (includeWalking) outboundOptions.push(walkingLegBetween(walkingOut?.rows?.[0]?.items?.[index], origin.pos, place.pos));
+    if (includeTransit) outboundOptions.push(readTransit(transitOut?.rows?.[0]?.items?.[index], departureTime));
+
+    const options = outboundOptions.filter(Boolean).flatMap(outbound => {
+      const timeBeforeReturn = (outbound.minutes ?? 0) + place.meal;
+      const costBeforeReturn = (mealEstimate(place.price) ?? 0) + (outbound.cost ?? 0);
+      if (timeBeforeReturn > time || costBeforeReturn > budget) return [];
+      const option = {outbound};
+      if (includeTransit && outbound.minutes !== null) {
+        // Planned durations use whole minutes from a shared trip start.
+        const returnAt = departureTime.getTime() + timeBeforeReturn * 60000;
+        if (!returnGroups.has(returnAt)) returnGroups.set(returnAt, new Map());
+        const group = returnGroups.get(returnAt);
+        if (!group.has(index)) group.set(index, {waypoint:restaurants[index], options:[]});
+        group.get(index).options.push(option);
+      } else if (travelMode === "transit") {
+        option.transitBack = {transit:true, minutes:null, cost:null};
+      }
+      return [option];
     });
-  };
+    return options.length ? [{place, waypoint:restaurants[index], options}] : [];
+  });
 
-  const outbound = await routeLegs(false, new Date());
-  if (!outbound.some(Boolean)) return {places:[], transitUnverified, transitRequestSucceeded};
-  const durations = outbound.flatMap(leg => Number.isFinite(leg?.minutes) ? [leg.minutes] : []).sort((a, b) => a - b);
-  const typicalOutbound = durations[Math.floor(durations.length / 2)] ?? 0;
-  const returnTime = new Date(Date.now() + (typicalOutbound + places[0].meal) * 60000);
-  const inbound = await routeLegs(true, returnTime);
-  const planned = places.flatMap((place, index) => outbound[index] && inbound[index]
-    ? [{...place, outbound:outbound[index], inbound:inbound[index]}] : []);
-  return {
-    places:planned, transitUnverified, transitRequestSucceeded,
-    walkingEstimates:planned.some(place => place.outbound.estimated || place.inbound.estimated)
-  };
+  const groups = [...returnGroups];
+  const [walkingBack] = await Promise.all([
+    includeWalking && viable.length ? fetchRouteMatrix(viable.map(item => item.waypoint), finish) : null,
+    (async () => {
+      const concurrency = 4;
+      for (let offset = 0; offset < groups.length; offset += concurrency) {
+        if (!isCurrent()) break;
+        await Promise.all(groups.slice(offset, offset + concurrency).map(async ([returnAt, byPlace]) => {
+          const departure = new Date(returnAt);
+          const entries = [...byPlace.values()];
+          const matrix = await fetchRouteMatrix(entries.map(entry => entry.waypoint), finish, departure);
+          transitRequestSucceeded ||= Boolean(matrix);
+          entries.forEach(({options}, index) => {
+            const leg = readTransit(matrix?.rows?.[index]?.items?.[0], departure);
+            for (const option of options) option.transitBack = leg;
+          });
+        }));
+      }
+    })()
+  ]);
+
+  const planned = viable.flatMap(({place, options}, index) => {
+    const walk = includeWalking ? walkingLegBetween(walkingBack?.rows?.[index]?.items?.[0], place.pos, end.pos) : null;
+    const routeOptions = options.flatMap(({outbound, transitBack}) =>
+      [walk, transitBack].filter(Boolean).map(inbound => ({outbound, inbound})));
+    return routeOptions.length ? [{...place, departureTime, routeOptions}] : [];
+  });
+  return {places:planned, transitUnverified, transitRequestSucceeded};
 }
 
 const minutesPerDay = 24 * 60;
 const weekDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const bostonClock = new Intl.DateTimeFormat("en-US", {
   timeZone:"America/New_York", weekday:"short", hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+});
+const bostonTripClock = new Intl.DateTimeFormat("en-US", {
+  timeZone:"America/New_York", hour:"numeric", minute:"2-digit"
 });
 
 function bostonWeekMinute(date) {
@@ -421,25 +481,61 @@ function compareRatings(a, b) {
   return b.rating - a.rating || b.reviews - a.reviews || a.venue.localeCompare(b.venue);
 }
 
-function rankTrips(places, {budget, time}, now = new Date()) {
+function balancedScore({rating, reviews}) {
+  // Smooth sparsely reviewed ratings toward a fixed reference, then compress large review counts.
+  const referenceRating = 4.2;
+  const referenceReviews = 50;
+  const popularityCap = 2000;
+  const adjustedRating = (rating * reviews + referenceRating * referenceReviews) / (reviews + referenceReviews);
+  const popularity = Math.log1p(Math.min(reviews, popularityCap)) / Math.log1p(popularityCap);
+  return 0.8 * (adjustedRating / 5) + 0.2 * popularity;
+}
+
+const rankingOrders = {
+  rating: {compare:compareRatings, label:"highest rated first"},
+  popular: {compare:(a, b) => b.reviews - a.reviews || compareRatings(a, b), label:"most reviewed first"},
+  balanced: {compare:(a, b) => balancedScore(b) - balancedScore(a) || compareRatings(a, b), label:"balanced by rating and review count"}
+};
+
+function tripTotals(place, outbound, inbound) {
+  const meal = mealEstimate(place.price);
+  const fare = (outbound.cost ?? 0) + (inbound.cost ?? 0);
+  const knownMinutes = (outbound.minutes ?? 0) + place.meal + (inbound.minutes ?? 0);
+  return {
+    fare, fareUnknown:outbound.cost === null || inbound.cost === null,
+    reserve:meal === null ? null : meal - place.price,
+    total:meal === null ? null : meal + fare,
+    knownMinutes, minutes:outbound.minutes === null || inbound.minutes === null ? null : knownMinutes
+  };
+}
+
+function hasKnownRouteData(leg) {
+  return Number.isFinite(leg.cost) && Number.isFinite(leg.minutes) && !leg.estimated;
+}
+
+function rankTrips(places, {budget, time, sortBy = "rating", strictSearch = false}, now = new Date()) {
+  if (!Number.isFinite(budget) || !Number.isFinite(time)) return [];
   const currentMinute = bostonWeekMinute(now);
   return places
-    .filter(place => place.outbound && place.inbound && place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute))
-    .map(place => {
-      const {outbound, inbound} = place;
-      const fare = (outbound.cost ?? 0) + (inbound.cost ?? 0);
-      const fareUnknown = outbound.cost === null || inbound.cost === null;
-      const reserve = place.price === null ? null : Math.round(place.price * .20);
-      const total = reserve === null ? null : place.price + reserve + fare;
-      const minutes = outbound.minutes === null || inbound.minutes === null
-        ? null : outbound.minutes + place.meal + inbound.minutes;
-      return {...place, fare, fareUnknown, reserve, total, minutes};
+    .filter(place => place.routeOptions?.length && place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute))
+    .flatMap(({routeOptions, ...place}) => {
+      if (strictSearch && !Number.isFinite(place.price)) return [];
+      const eligible = routeOptions.flatMap(({outbound, inbound}) => {
+        if (strictSearch && (!hasKnownRouteData(outbound) || !hasKnownRouteData(inbound))) return [];
+        const totals = tripTotals(place, outbound, inbound);
+        if ((totals.total ?? totals.fare) > budget || totals.knownMinutes > time) return [];
+        if (outbound.minutes !== null) {
+          const arrival = new Date((place.departureTime ?? now).getTime() + outbound.minutes * 60000);
+          if (!isOpenAt(place.openingPeriods, bostonWeekMinute(arrival))) return [];
+        }
+        return [{...place, outbound, inbound, ...totals}];
+      });
+      // A route with an unknown fare remains an option if no priced route fits.
+      eligible.sort((a, b) => Number(a.fareUnknown) - Number(b.fareUnknown) ||
+        (a.minutes ?? Infinity) - (b.minutes ?? Infinity) || a.fare - b.fare);
+      return eligible.slice(0, 1);
     })
-    .filter(trip => (trip.total ?? trip.fare) <= budget &&
-      trip.meal + (trip.outbound.minutes ?? 0) + (trip.inbound.minutes ?? 0) <= time &&
-      (trip.outbound.minutes === null || isOpenAt(trip.openingPeriods,
-        bostonWeekMinute(new Date(now.getTime() + trip.outbound.minutes * 60000)))))
-    .sort(compareRatings);
+    .sort(rankingOrders[sortBy].compare);
 }
 
 function higherBudgetPick(trips, previousBudget) {
@@ -474,6 +570,7 @@ function selectTrip(id) {
 
 let placesLibrary;
 let searchSequence = 0;
+let currentSearch = null;
 let openingHoursTimer;
 let lastBudget = Math.round(Number(byId("budget").defaultValue) * 100);
 let previousBudget = null;
@@ -526,7 +623,8 @@ function googleRestaurant(place) {
   return {
     id:place.id, venue:place.displayName, address:place.formattedAddress, pos,
     area:place.shortFormattedAddress || place.formattedAddress.split(",")[0],
-    rating:place.rating, reviews:place.userRatingCount ?? 0, price, meal:25,
+    rating:place.rating, reviews:Number.isFinite(place.userRatingCount) ? Math.max(0, place.userRatingCount) : 0,
+    price,
     openingPeriods:place.currentOpeningHours?.periods ?? place.regularOpeningHours?.periods,
     google:true, photo:place.photos?.[0], providers:place.attributions ?? []
   };
@@ -620,7 +718,7 @@ function tripMetrics(trip, minutes, compact = false) {
       <strong class="metric-value${unknownPrice ? " price-unknown" : ""}">${prefix}${price}</strong>
     </span>
     <span class="trip-metric trip-metric-time">
-      <span class="metric-label">${compact ? "Base trip time" : "Total time"}</span>
+      <span class="metric-label">Total time</span>
       <strong class="metric-value${minutes === null ? " price-unknown" : ""}">${minutes === null ? "Check route" : `~${minutes} <small>min</small>`}</strong>
     </span>
   </span>`;
@@ -824,69 +922,33 @@ async function loadPlaceDetails(trip, loadDetails) {
   }
 }
 
-const waitBuffers = new Map();
-
-function waitEstimate(trip) {
-  if (trip.minutes === null) return {minutes:null, total:null};
-  const minutes = waitBuffers.get(trip.id) ?? null;
-  return {minutes, total:trip.minutes + (minutes ?? 0)};
-}
-
-function renderWait(trip) {
-  const {minutes, total} = waitEstimate(trip);
-  const remaining = state.time - total;
-  const summary = byId("wait-summary");
-  byId("detail-cost-time").innerHTML = tripMetrics(trip, total);
-  summary.hidden = !minutes;
-  summary.textContent = minutes
-    ? `${minutes} min wait buffer included · ${remaining < 0 ? `${-remaining} min over your time limit` : `${remaining} min to spare`}.`
-    : "";
-  summary.classList.toggle("over-time", remaining < 0);
-  byId("nearby-activity").hidden = total === null || !(remaining >= trip.extra);
-}
-
-function wireWaitBuffer(trip) {
-  const buffer = byId("wait-buffer");
-  buffer.value = waitBuffers.get(trip.id) ?? "";
-  buffer.addEventListener("input", () => {
-    if (buffer.validity.badInput || !buffer.validity.valid) return;
-    if (buffer.valueAsNumber > 0) waitBuffers.set(trip.id, buffer.valueAsNumber);
-    else waitBuffers.delete(trip.id);
-    renderWait(trip);
-    renderDiagram(trip);
-  });
-  renderWait(trip);
-}
-
 function renderDetail(loadDetails = true) {
   const detail = byId("detail");
   const trip = selectedTrip();
   detail.hidden = !trip;
   if (!trip) return;
   const placePage = escapeHtml(mapsPlacePage(trip));
-  const meal = trip.google ? "Estimated meal stop" : escapeHtml(trip.dish);
+  const dish = trip.google ? "" : escapeHtml(trip.dish);
   const fare = trip.fareUnknown
     ? `${trip.fare ? `${money(trip.fare)} in known fares. ` : ""}Check Google Maps for unavailable transit fares.`
     : `${money(trip.fare)} estimated transit fare.`;
-  const estimate = trip.total === null ? `Meal price unavailable. ${fare}`
+  const costBreakdown = trip.total === null ? `Meal price unavailable. ${fare}`
     : `${money(trip.price)} ${trip.google ? "starting meal estimate" : "meal"} + ${money(trip.reserve)} tax and tip reserve. ${fare}`;
-  detail.innerHTML = `<div class="detail-meta"><h2>${escapeHtml(trip.venue)}</h2><a href="${trip.google ? placePage : trip.ratingUrl}" target="_blank" rel="noopener">★ ${trip.rating.toFixed(1)} · ${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a></div><p>${trip.google ? "" : `${meal} · `}${escapeHtml(trip.address)}</p>
-    <div id="detail-cost-time"></div>
-    <p class="muted" id="cost-breakdown">${estimate}</p>
+  const departure = trip.inbound.departureTime;
+  const showActivity = trip.activity && trip.minutes !== null && state.time - trip.minutes >= trip.extra;
+  detail.innerHTML = `<div class="detail-meta"><h2>${escapeHtml(trip.venue)}</h2><a href="${trip.google ? placePage : trip.ratingUrl}" target="_blank" rel="noopener">★ ${trip.rating.toFixed(1)} · ${trip.reviews.toLocaleString()} ${trip.google ? "Google Maps" : "Tripadvisor"} reviews ↗</a></div><p>${dish ? `${dish} · ` : ""}${escapeHtml(trip.address)}</p>
+    <div id="detail-cost-time">${tripMetrics(trip, trip.minutes)}</div>
+    <p class="muted" id="cost-breakdown">${escapeHtml(costBreakdown)}</p>
     <div class="opening-hours" id="opening-hours" aria-live="polite"></div>
     <ol><li><strong>Outbound · ${legTimeLabel(trip.outbound.minutes)}.</strong> ${showLeg(state.origin,trip,false)}</li>
-    <li><strong>Meal · ~${trip.meal} min.</strong> ${meal}.</li>
-    <li><strong>Return · ${legTimeLabel(trip.inbound.minutes)}.</strong> ${showLeg(state.end,trip,true)}</li></ol>
-    <p class="muted" id="nearby-activity" hidden>${trip.activity ? `<strong>Free activity nearby.</strong> ${trip.activity} (~${trip.extra} extra min).` : ""}</p>
+    <li><strong>Restaurant stay · ${trip.meal} min.</strong></li>
+    <li><strong>Return · ${legTimeLabel(trip.inbound.minutes)}.</strong>
+      ${departure ? `Leave around ${bostonTripClock.format(departure)} Boston time. ` : ""}${showLeg(state.end,trip,true)}</li></ol>
+    ${showActivity ? `<p class="muted"><strong>Free activity nearby.</strong> ${escapeHtml(trip.activity)} (~${trip.extra} extra min).</p>` : ""}
     <div class="links">${trip.menu ? `<a class="link" href="${trip.menu}" target="_blank" rel="noopener">Full menu ↗</a>` : ""}
     <a class="link" href="${placePage}" target="_blank" rel="noopener">Open restaurant on Google Maps ↗</a></div>
-    <details class="detail-panel" open><summary>Photos &amp; reviews</summary><div id="place-media-content" aria-live="polite"></div></details>
-    <section class="detail-panel" aria-label="Wait buffer" ${trip.minutes === null ? "hidden" : ""}>
-      <label>Wait buffer (min)<input id="wait-buffer" type="number" min="0" max="120" step="1" placeholder="Optional"></label>
-      <p id="wait-summary" class="muted" role="status" hidden></p>
-    </section>`;
+    <details class="detail-panel" open><summary>Photos &amp; reviews</summary><div id="place-media-content" aria-live="polite"></div></details>`;
   loadPlaceDetails(trip, loadDetails);
-  wireWaitBuffer(trip);
 }
 
 function selectedTrip() {
@@ -905,11 +967,14 @@ function displayedLeg(trip, returning) {
   const planned = returning ? trip.inbound : trip.outbound;
   const active = activeLeg === (returning ? "return" : "outbound");
   if (planned.transit || !active || mapMode !== "transit") return planned;
-  if (!transitPreviews.has(planned)) {
-    const afterMeal = (trip.outbound.minutes ?? 0) + trip.meal + (waitBuffers.get(trip.id) ?? 0);
+  const start = trip.departureTime;
+  const offset = returning ? (trip.outbound.minutes ?? 0) + trip.meal : 0;
+  const departure = start && start.getTime() + offset * 60000;
+  const preview = transitPreviews.get(planned);
+  if (!preview || preview.departureTime?.getTime() !== departure) {
     transitPreviews.set(planned, {
       transit:true, preview:true,
-      departureTime:returning ? new Date(Date.now() + afterMeal * 60000) : new Date()
+      departureTime:departure === undefined ? undefined : new Date(departure)
     });
   }
   return transitPreviews.get(planned);
@@ -986,7 +1051,7 @@ function transitStepMarkup(route) {
 
 async function loadTransitTimeline(trip, returning) {
   const leg = displayedLeg(trip, returning);
-  if (!leg.transit || transitTimelines.has(leg)) return;
+  if (!leg.transit || !leg.departureTime || transitTimelines.has(leg)) return;
 
   const endpoint = returning ? state.end : state.origin;
   const origin = latLng(returning ? trip.pos : endpoint.pos);
@@ -1020,13 +1085,15 @@ function renderRouteLeg(trip, location, returning) {
   const finish = returning ? endpoint : restaurant;
   const estimate = data.preview ? "Transit preview"
     : `${legTimeLabel(data.minutes)} · ${data.cost === null ? "Fare unavailable" : money(data.cost)}`;
+  const timing = data.departureTime ? `Leave around ${bostonTripClock.format(data.departureTime)}` : "";
+  const transitStatus = data.departureTime ? "Loading stops and transfers…" : "Departure time unavailable.";
   const steps = data.transit
-    ? transitTimelines.get(data) ?? '<li class="route-segment">Loading stops and transfers…</li>'
+    ? transitTimelines.get(data) ?? `<li class="route-segment">${transitStatus}</li>`
     : `<li class="route-segment route-walk">${data.estimated ? "Estimated walk" : "Walk"}</li>`;
   return `<section class="route-leg${returning ? " returning" : ""}" data-active="${activeLeg === (returning ? "return" : "outbound")}">
     <h4>${returning ? "2. Return" : "1. Outbound"} <span>${estimate}</span></h4>
     <ol class="route-steps" role="list">
-      <li class="route-stop"><span>${start.label}</span>${escapeHtml(start.name)}</li>
+      <li class="route-stop"><span>${start.label}${timing ? ` · ${timing}` : ""}</span>${escapeHtml(start.name)}</li>
       ${steps}
       <li class="route-stop"><span>${finish.label}</span>${escapeHtml(finish.name)}</li>
     </ol>
@@ -1042,10 +1109,8 @@ function renderDiagram(trip) {
     diagram.innerHTML = '<p class="route-empty">Find a matching restaurant to see its route.</p>';
     return;
   }
-  const {minutes, total} = waitEstimate(trip);
-  summary.innerHTML = `<h3>${escapeHtml(trip.venue)}</h3>${tripMetrics(trip, total)}`;
-  const timing = total === null ? "Transit time is unavailable in the planner. Check the route on the map."
-    : `Includes ~${trip.meal} min for the meal${minutes === null ? "" : ` and ${minutes} min of wait buffer`}.`;
+  summary.innerHTML = `<h3>${escapeHtml(trip.venue)}</h3>${tripMetrics(trip, trip.minutes)}`;
+  const timing = `Includes a ${trip.meal} min restaurant stay.`;
   diagram.innerHTML = `<p class="muted route-timing">${timing}</p>
     <div class="route-legs">${renderRouteLeg(trip,state.origin,false)}${renderRouteLeg(trip,state.end,true)}</div>`;
 }
@@ -1094,7 +1159,7 @@ function renderMap() {
   const mode = mapMode === "recommended" ? recommended : mapMode;
   byId("map-status").textContent = mode === recommended
     ? (leg.minutes === null ? "Public transit map · check the route and travel time here."
-      : "Google Maps directions · travel times may differ from planner estimates.")
+      : "Google Maps directions · map departures and travel times may differ from planner estimates.")
     : `${mode === "transit" ? "Public transit" : "Walking"} map preview · the planner uses ${recommended === "transit" ? "public transit" : "walking"} for this leg.`;
   const directions = new URLSearchParams({api:"1",origin,destination,travelmode:mode});
   if (trip.google) directions.set(returning ? "origin_place_id" : "destination_place_id", trip.id);
@@ -1149,11 +1214,12 @@ function createTripRow(trip, position = null) {
   return row;
 }
 
-function renderRankings(trips, {origin, end, time, budget, previousBudget}, googleResults, status, loadDetails = true, keepSelection = false) {
+function renderRankings(trips, {origin, end, time, budget, previousBudget, strictSearch}, googleResults, status, loadDetails = true, keepSelection = false) {
   const timedTrips = trips.filter(trip => trip.minutes !== null);
   const ranked = timedTrips.slice(0, 10);
   const previews = trips.filter(trip => trip.minutes === null).slice(0, 3);
   const budgetPick = higherBudgetPick(timedTrips, previousBudget);
+  const oldTrip = selectedTrip();
   const oldSelection = state.selected;
   const keepCurrent = keepSelection && (budgetPick?.id === oldSelection || [...ranked, ...previews].some(trip => trip.id === oldSelection));
   const selected = keepCurrent ? oldSelection : (ranked[0] ?? previews[0])?.id ?? null;
@@ -1162,7 +1228,9 @@ function renderRankings(trips, {origin, end, time, budget, previousBudget}, goog
   byId("rank-attribution").hidden = !googleResults;
   const empty = byId("empty");
   empty.hidden = !!ranked.length || !!previews.length || !loadDetails || !googleResults;
-  empty.textContent = "No Boston restaurants in these results fit your travel mode, budget, time, and opening hours.";
+  empty.textContent = strictSearch
+    ? "No restaurants in these results fit your trip limits with a meal price, known fares, and route times."
+    : "No Boston restaurants in these results fit your travel mode, budget, time, and opening hours.";
 
   const budgetPanel = byId("budget-pick");
   budgetPanel.hidden = previousBudget === null || !loadDetails || (!googleResults && !budgetPick);
@@ -1179,48 +1247,77 @@ function renderRankings(trips, {origin, end, time, budget, previousBudget}, goog
   byId("ranks").replaceChildren(...ranked.map((trip,index) => createTripRow(trip, index + 1)));
   byId("route-previews").hidden = !previews.length;
   byId("route-preview-list").replaceChildren(...previews.map(trip => createTripRow(trip)));
-  if (!keepCurrent) {
+  const currentTrip = selectedTrip();
+  if (!keepCurrent || oldTrip?.outbound !== currentTrip?.outbound || oldTrip?.inbound !== currentTrip?.inbound) {
     renderDetail(loadDetails);
     renderMap();
   }
 }
 
-function watchOpeningHours({places, walkingEstimates, transitUnverified, partial}, preferences) {
-  let lastIds;
+function watchOpeningHours({places, transitUnverified, partial}, preferences, keepSelection = false) {
+  let lastResults;
   const update = () => {
     const ranked = rankTrips(places, preferences);
-    const ids = JSON.stringify(ranked.map(trip => trip.id));
-    if (ids === lastIds) return;
+    const results = JSON.stringify(ranked.map(trip => [trip.id, trip.outbound.transit, trip.inbound.transit]));
+    if (results === lastResults) return;
     const timedCount = ranked.filter(trip => trip.minutes !== null).length;
-    const transitNotice = transitUnverified ? " Some transit estimates are unavailable. Use Public transit above the map to view routes." : "";
+    const walkingEstimates = ranked.some(trip => trip.outbound.estimated || trip.inbound.estimated);
+    const transitNotice = transitUnverified && !preferences.strictSearch
+      ? " Some transit estimates are unavailable. Use Public transit above the map to view routes." : "";
     const walkNotice = walkingEstimates ? " Some walking times are estimates." : "";
     const coverageNotice = partial ? " Some Boston areas did not load." : "";
+    const strictNotice = preferences.strictSearch ? " Strict search is on." : "";
     renderRankings(ranked, preferences, true,
-      `Showing ${Math.min(10, timedCount)} of ${timedCount} Boston ${timedCount === 1 ? "match" : "matches"} within your time limit · highest rated first.${coverageNotice}${transitNotice}${walkNotice}`,
-      true, lastIds !== undefined);
-    lastIds = ids;
+      `Showing ${Math.min(10, timedCount)} of ${timedCount} Boston ${timedCount === 1 ? "match" : "matches"} within your time limit · ${rankingOrders[preferences.sortBy].label}.${strictNotice}${coverageNotice}${transitNotice}${walkNotice}`,
+      true, keepSelection || lastResults !== undefined);
+    lastResults = results;
   };
   update();
   if (places.length) openingHoursTimer = setInterval(update, 60000);
 }
 
-async function planBostonRankings(candidates, preferences, sequence) {
-  const byRating = [...candidates].sort(compareRatings);
-  const planned = {places:[], walkingEstimates:false, transitUnverified:false};
+async function planBostonRankings(search, preferences, sequence) {
+  const {candidates, routeCache} = search;
+  const ordered = [...candidates].sort(rankingOrders[preferences.sortBy].compare);
+  const places = [];
   const batchSize = 20;
-  for (let offset = 0; offset < byRating.length; offset += batchSize) {
-    const batch = await planRoutes(byRating.slice(offset, offset + batchSize), preferences);
-    if (sequence !== searchSequence) return null;
-    planned.places.push(...batch.places);
-    planned.walkingEstimates ||= batch.walkingEstimates;
-    planned.transitUnverified ||= batch.transitUnverified;
+  // Strict search filters locally and never extends the regular route lookup.
+  const lookupPreferences = {...preferences, strictSearch:false};
+  for (let offset = 0; offset < ordered.length; offset += batchSize) {
+    const group = ordered.slice(offset, offset + batchSize);
+    const pending = group.filter(place => !routeCache.has(place.id));
+    let batch;
+    if (pending.length) {
+      batch = await planRoutes(pending, lookupPreferences, () => sequence === searchSequence);
+      if (sequence !== searchSequence) return null;
+      const byId = new Map(batch.places.map(place => [place.id, place]));
+      for (const place of pending) routeCache.set(place.id, byId.get(place.id) ?? null);
+      search.transitUnverified ||= batch.transitUnverified;
+    }
+    places.push(...group.map(place => routeCache.get(place.id)).filter(Boolean));
 
-    const timed = rankTrips(planned.places, preferences).filter(trip => trip.minutes !== null);
+    const timed = rankTrips(places, lookupPreferences).filter(trip => trip.minutes !== null);
     if (timed.length >= 10 &&
         (preferences.previousBudget === null || higherBudgetPick(timed, preferences.previousBudget))) break;
-    if (preferences.travelMode === "transit" && batch.transitUnverified && !batch.transitRequestSucceeded) break;
+    if (preferences.travelMode === "transit" && batch?.transitUnverified && !batch.transitRequestSucceeded) break;
   }
-  return planned;
+  return {places, transitUnverified:search.transitUnverified};
+}
+
+async function showSearchRankings(search, sequence, keepSelection = false) {
+  clearInterval(openingHoursTimer);
+  const preferences = {...search.preferences, sortBy:byId("ranking-sort").value};
+  if (search.candidates.length) {
+    byId("result-status").textContent = keepSelection ? "Updating restaurant rankings…" : "Calculating travel times…";
+  }
+  try {
+    const planned = await planBostonRankings(search, preferences, sequence);
+    if (planned && sequence === searchSequence) {
+      watchOpeningHours({...planned, partial:search.partial}, preferences, keepSelection);
+    }
+  } catch {
+    if (sequence === searchSequence) byId("result-status").textContent = "Could not complete the restaurant rankings. Try searching again.";
+  }
 }
 
 async function refresh() {
@@ -1228,7 +1325,10 @@ async function refresh() {
     byId("result-status").textContent = "Add a Google Maps key in maps-config.js to search restaurants and view routes.";
     return;
   }
+  const stay = byId("stay-minutes");
+  if (!stay.reportValidity()) return;
   clearInterval(openingHoursTimer);
+  currentSearch = null;
   mapMode = "recommended";
   const sequence = ++searchSequence;
   const cuisine = byId("cuisine");
@@ -1245,10 +1345,16 @@ async function refresh() {
     budget,
     previousBudget,
     time:byId("time").valueAsNumber,
+    stayMinutes:stay.valueAsNumber,
+    strictSearch:byId("strict-search").checked,
     cuisine:cuisine.value,
     cuisineLabel:cuisine.value === "any" ? "" : cuisine.selectedOptions[0].textContent,
     query:byId("restaurant-query").value.trim()
   };
+  if (preferences.stayMinutes > preferences.time) {
+    renderRankings([], preferences, false, "Your restaurant stay exceeds your available trip time.");
+    return;
+  }
   if (originText === locationLabel && !deviceOrigin) {
     renderRankings([], preferences, false, "Allow location access or choose a Boston starting point.");
     return;
@@ -1283,12 +1389,13 @@ async function refresh() {
       places = [...combined.values()];
     }
     const currentMinute = bostonWeekMinute(new Date());
-    const candidates = places.filter(place => place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute) &&
-      place.meal <= preferences.time && (place.price === null || place.price + Math.round(place.price * .20) <= budget));
-    if (candidates.length) byId("result-status").textContent = "Calculating travel times…";
-    const planned = await planBostonRankings(candidates, preferences, sequence);
-    if (!planned || sequence !== searchSequence) return;
-    watchOpeningHours({...planned, partial:search.partial}, preferences);
+    const candidates = places
+      .filter(place => place.openingPeriods?.length && isOpenAt(place.openingPeriods, currentMinute) &&
+        (mealEstimate(place.price) ?? 0) <= budget)
+      .map(place => ({...place, meal:preferences.stayMinutes}));
+    preferences.departureTime = new Date();
+    currentSearch = {candidates, preferences, partial:search.partial, routeCache:new Map(), transitUnverified:false};
+    await showSearchRankings(currentSearch, sequence);
   } catch {
     if (sequence !== searchSequence) return;
     renderRankings(saved, preferences, false,
@@ -1352,6 +1459,9 @@ byId("planner").addEventListener("submit",event => {
   event.preventDefault();
   refresh();
   byId("results-heading").focus();
+});
+byId("ranking-sort").addEventListener("change", () => {
+  if (currentSearch) showSearchRankings(currentSearch, ++searchSequence, true);
 });
 byId("map-outbound").addEventListener("click",() => {
   activeLeg = "outbound";
