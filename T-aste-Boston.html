@@ -618,7 +618,8 @@ function loadPlacesLibrary() {
     script.async = true;
     script.onerror = () => fail("Google Maps could not be loaded.");
     const params = new URLSearchParams({
-      key:googleEmbedKey, v:"weekly", loading:"async", libraries:"places", callback:"initTasteBostonPlaces"
+      key:googleEmbedKey, v:"weekly", loading:"async", libraries:"places", callback:"initTasteBostonPlaces",
+      language:"en", region:"US"
     });
     script.src = "https://maps.googleapis.com/maps/api/js?" + params;
     document.head.append(script);
@@ -1195,7 +1196,7 @@ function renderMap() {
   directionsLink.href = "https://www.google.com/maps/dir/?" + directions;
 
   const viewport = routeViewport(frame, endpoint.pos, trip.pos);
-  const params = new URLSearchParams({key:googleEmbedKey,origin,destination,mode,region:"us", ...viewport});
+  const params = new URLSearchParams({key:googleEmbedKey,origin,destination,mode,region:"us",language:"en", ...viewport});
   if (trip.google) params.set(returning ? "origin" : "destination", "place_id:" + trip.id);
   if (endpoint.placeId) params.set(returning ? "destination" : "origin", "place_id:" + endpoint.placeId);
   const url = "https://www.google.com/maps/embed/v1/directions?" + params;
